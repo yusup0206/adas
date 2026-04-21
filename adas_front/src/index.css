@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #272827;
+  --color-headerColor: "#333";
+  --color-textColor: oklch(55.1% 0.027 264.364);
+  --color-borderColor: #eaecf0;
+  --color-bgColor: #fcfcfd;
+}
+
+.m-0 {
+  margin: 0 !important;
+}
+
+.w-full {
+  width: 100% !important;
+}
+
+.ant-form-item-vertical .ant-form-item-label {
+  padding: 0px !important;
+}
+
+section {
+  @apply w-full flex flex-col;
+}

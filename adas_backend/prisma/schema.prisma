@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Supplier {
+  id             Int             @id @default(autoincrement())
+  name_tm        String
+  name_ru        String
+  totalAmount    Decimal         @default(0) @db.Decimal(15, 2)
+  paidAmount     Decimal         @default(0) @db.Decimal(15, 2)
+  remainingDebt  Decimal         @default(0) @db.Decimal(15, 2)
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Product {
+  id                   Int                 @id @default(autoincrement())
+  name_tm              String
+  name_ru              String
+  sku                  String              @unique
+  buyPrice             Decimal             @db.Decimal(15, 2)
+  sellPrice            Decimal             @db.Decimal(15, 2)
+  unit                 Measurement?        @relation(fields: [unitId], references: [id])
+  unitId               Int?
+  productionCountry_tm String              @default("")
+  productionCountry_ru String              @default("")
+  warehouse            Warehouse           @relation(fields: [warehouseId], references: [id])
+  warehouseId          Int
+  items                PurchaseOrderItem[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model Warehouse {
+  id         Int       @id @default(autoincrement())
+  name_tm    String
+  name_ru    String
+  address_tm String    @default("")
+  address_ru String    @default("")
+  location   String?
+  products   Product[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum OrderType {
+  CASH
+  INSTALLMENT
+}
+
+model PurchaseOrder {
+  id          Int                 @id @default(autoincrement())
+  supplier    Supplier            @relation(fields: [supplierId], references: [id])
+  supplierId  Int
+  type        OrderType
+  totalPrice  Decimal             @db.Decimal(15, 2)
+  items       PurchaseOrderItem[]
+  paymentPlan PaymentPlan?
+  agreement   Agreement?          @relation(fields: [agreementId], references: [id])
+  agreementId Int?
+  orderDate   DateTime            @default(now())
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              Int           @id @default(autoincrement())
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId Int
+  product         Product       @relation(fields: [productId], references: [id])
+  productId       Int
+  quantity        Int
+  unitPrice       Decimal       @db.Decimal(15, 2)
+  totalPrice      Decimal       @db.Decimal(15, 2)
+}
+
+model PaymentPlan {
+  id              Int           @id @default(autoincrement())
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId Int           @unique
+  durationMonths  Int
+  installments    Installment[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model Installment {
+  id             Int           @id @default(autoincrement())
+  paymentPlan    PaymentPlan   @relation(fields: [paymentPlanId], references: [id])
+  paymentPlanId  Int
+  amount         Decimal       @db.Decimal(15, 2)
+  dueDate        DateTime
+  status         PaymentStatus @default(PENDING)
+  paymentDate    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Client {
+  id                   Int         @id @default(autoincrement())
+  name_tm              String
+  name_ru              String
+  directorName_tm      String      @default("")
+  directorName_ru      String      @default("")
+  address_tm           String      @default("")
+  address_ru           String      @default("")
+  bankName_tm          String      @default("")
+  bankName_ru          String      @default("")
+  swift                String      @default("")
+  accountNo            String      @default("")
+  currentAccount       String      @default("")
+  correspondentAccount String      @default("")
+  bankIdCode           String      @default("")
+  individualIdNumber   String      @default("")
+  buyerAgreements      Agreement[] @relation("BuyerClient")
+  sellerAgreements     Agreement[] @relation("SellerClient")
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+}
+
+model Measurement {
+  id        Int       @id @default(autoincrement())
+  name_tm   String
+  name_ru   String
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Agreement {
+  id              Int             @id @default(autoincrement())
+  agreementNumber String          @default("")
+  registeredDate  DateTime        @default(now())
+  validDate       DateTime        @default(now())
+  status          String          @default("active")
+  buyerClient     Client?         @relation("BuyerClient", fields: [buyerClientId], references: [id])
+  buyerClientId   Int?
+  sellerClient    Client?         @relation("SellerClient", fields: [sellerClientId], references: [id])
+  sellerClientId  Int?
+  purchaseOrders  PurchaseOrder[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}

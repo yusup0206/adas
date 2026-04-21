@@ -1,0 +1,164 @@
+import type { ProductValues } from "@/interfaces/products.interface";
+import { useCreateProductMutation } from "@/services/productsApi";
+import { useGetWarehousesQuery } from "@/services/warehousesApi";
+import { useGetUnitsQuery } from "@/services/unitsApi";
+import { App, Button, Form, Input, Modal, Select, InputNumber } from "antd";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { FaPlus } from "react-icons/fa6";
+
+const CreateModal = () => {
+  const { t, i18n } = useTranslation();
+  const { message } = App.useApp();
+
+  const [form] = Form.useForm();
+
+  //   states
+  const [openModal, setOpenModal] = useState(false);
+
+  // queries
+  const { data: warehouses } = useGetWarehousesQuery();
+  const { data: units } = useGetUnitsQuery();
+  const [create] = useCreateProductMutation();
+
+  // handlers
+  const handleCreate = async (values: ProductValues) => {
+    try {
+      await create(values).unwrap();
+      setOpenModal(false);
+      message.success(t("successfully_created"));
+      form.resetFields();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        type="primary"
+        size="large"
+        icon={<FaPlus />}
+        onClick={() => setOpenModal(true)}
+        className="max-w-full md:max-w-fit w-full"
+      >
+        {t("add_new")}
+      </Button>
+      <Modal
+        title={t("add_new")}
+        open={openModal}
+        onCancel={() => setOpenModal(false)}
+        footer={null}
+        centered
+        
+      >
+        <Form
+          id="product-create-form"
+          form={form}
+          layout="vertical"
+          onFinish={handleCreate}
+          className="grid grid-cols-12 gap-4"
+        >
+          <Form.Item
+            name="name_tm"
+            className="col-span-6 m-0"
+            label={`${t("name")} (TM)`}
+            rules={[{ required: true, message: t("required_field") }]}
+          >
+            <Input className="w-full" allowClear />
+          </Form.Item>
+          <Form.Item
+            name="name_ru"
+            className="col-span-6 m-0"
+            label={`${t("name")} (RU)`}
+            rules={[{ required: true, message: t("required_field") }]}
+          >
+            <Input className="w-full" allowClear />
+          </Form.Item>
+          <Form.Item
+            name="sku"
+            className="col-span-12 m-0"
+            label="SKU"
+            rules={[{ required: true, message: t("required_field") }]}
+          >
+            <Input className="w-full" allowClear />
+          </Form.Item>
+          <Form.Item
+            name="buyPrice"
+            className="col-span-6 m-0"
+            label={t("buy_price")}
+            rules={[{ required: true, message: t("required_field") }]}
+          >
+            <InputNumber step={0.01} className="w-full" />
+          </Form.Item>
+          <Form.Item
+            name="sellPrice"
+            className="col-span-6 m-0"
+            label={t("sell_price")}
+            rules={[{ required: true, message: t("required_field") }]}
+          >
+            <InputNumber step={0.01} className="w-full" />
+          </Form.Item>
+          <Form.Item
+            name="unitId"
+            className="col-span-6 m-0"
+            label={t("unit")}
+          >
+            <Select
+              placeholder={t("select_unit")}
+              options={units?.list?.map((u: any) => ({
+                value: u.id,
+                label: i18n.language === "ru" ? u.name_ru : u.name_tm,
+              }))}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item
+            name="warehouseId"
+            className="col-span-6 m-0"
+            label={t("warehouse")}
+            rules={[{ required: true, message: t("required_field") }]}
+          >
+            <Select
+              placeholder={t("select_warehouse")}
+              options={warehouses?.list?.map((w: any) => ({
+                value: w.id,
+                label: i18n.language === "ru" ? w.name_ru : w.name_tm,
+              }))}
+              allowClear
+            />
+          </Form.Item>
+          <Form.Item
+            name="productionCountry_tm"
+            className="col-span-6 m-0"
+            label={`${t("production_country")} (TM)`}
+          >
+            <Input className="w-full" allowClear />
+          </Form.Item>
+          <Form.Item
+            name="productionCountry_ru"
+            className="col-span-6 m-0"
+            label={`${t("production_country")} (RU)`}
+          >
+            <Input className="w-full" allowClear />
+          </Form.Item>
+
+          <div className="col-span-12 w-full grid grid-cols-2 items-center gap-4 mt-4">
+            <Button
+              type="default"
+              size="large"
+              onClick={() => setOpenModal(false)}
+            >
+              {t("cancel")}
+            </Button>
+            <Button type="primary" htmlType="submit" form="product-create-form" size="large">
+              {t("save")}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+    </>
+  );
+};
+
+export default CreateModal;
