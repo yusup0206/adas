@@ -5,7 +5,6 @@ import {
   FaRuler,
   FaUsers,
   FaHandshake,
-  FaWarehouse,
   FaChartLine,
 } from "react-icons/fa6";
 
@@ -26,11 +25,7 @@ export const sidebarData = {
       url: "/suppliers",
       icon: <FaHandshake className="size-5 min-w-5" />,
     },
-    {
-      labelKey: "warehouses",
-      url: "/warehouses",
-      icon: <FaWarehouse className="size-5 min-w-5" />,
-    },
+
     {
       labelKey: "products",
       url: "/products",

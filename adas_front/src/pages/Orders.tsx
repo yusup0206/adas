@@ -6,8 +6,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import CreateModal from "@/components/orders/CreateModal";
 import UpdateModal from "@/components/orders/UpdateModal";
+import DeleteModal from "@/components/shared/DeleteModal";
+import UpdateStatusModal from "@/components/orders/UpdateStatusModal";
+import EditModal from "@/components/orders/EditModal";
+import { Select } from "antd";
 import {
   useGetOrdersQuery,
+  useDeleteOrderMutation,
 } from "@/services/ordersApi";
 import type { Order } from "@/interfaces/orders.interface";
 
@@ -18,10 +23,11 @@ const Orders = () => {
   const [filters, setFilters] = useState({
     page: "1",
     pageSize: "10",
+    status: "ALL",
   });
 
-  // queries
   const { data: ordersData, isLoading: ordersLoading } = useGetOrdersQuery(filters);
+  const [deleteOrder] = useDeleteOrderMutation();
 
   // table data
   const columns: TableProps<Order>["columns"] = [
@@ -41,10 +47,10 @@ const Orders = () => {
     },
 
     {
-      title: t("type"),
-      dataIndex: "type",
-      key: "type",
-      render: (type: string) => t(type.toLowerCase()),
+      title: t("status"),
+      dataIndex: "status",
+      key: "status",
+      render: (status: string) => t(status.toLowerCase()) || status,
     },
 
     {
@@ -55,7 +61,7 @@ const Orders = () => {
     },
 
     {
-      title: t("status"),
+      title: t("payment"),
       dataIndex: "isPaid",
       key: "isPaid",
       render: (isPaid: boolean) => (
@@ -69,9 +75,11 @@ const Orders = () => {
       title: t("actions"),
       key: "action",
       render: (_, record) => (
-        <div className="flex gap-4 items-center justify-start text-textColor">
+        <div className="flex gap-2 items-center justify-start text-textColor">
+          <UpdateStatusModal orderId={record.id} currentStatus={record.status} />
+          <EditModal record={record} />
           <UpdateModal record={record} />
-          {/* Purchase orders usually aren't deleted directly in this flow */}
+          <DeleteModal id={record.id} onDelete={deleteOrder} />
         </div>
       ),
     },
@@ -84,6 +92,16 @@ const Orders = () => {
         <Section>
           <Box>
             <div className="w-full flex flex-col md:flex-row items-center justify-end gap-4">
+              <Select
+                value={filters.status}
+                onChange={(val) => setFilters(prev => ({ ...prev, status: val, page: "1" }))}
+                style={{ width: 200 }}
+                options={[
+                  { value: "ALL", label: t("all_orders") || "All Orders" },
+                  { value: "PENDING", label: t("pending") || "Pending" },
+                  { value: "RECEIVED", label: t("received") || "Received" },
+                ]}
+              />
               <CreateModal />
             </div>
             <Table

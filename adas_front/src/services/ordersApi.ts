@@ -22,6 +22,7 @@ export const ordersApi = createApi({
           if (filters.page) params.append("page", filters.page.toString());
           if (filters.pageSize)
             params.append("pageSize", filters.pageSize.toString());
+          if (filters.status) params.append("status", filters.status);
 
           if (params.toString()) queryString += `?${params.toString()}`;
         }
@@ -37,12 +38,36 @@ export const ordersApi = createApi({
       }),
       invalidatesTags: ["Order"],
     }),
-    recordPayment: builder.mutation<any, number>({
-      query: (installmentId) => ({
-        url: `/installments/${installmentId}/pay`,
+    recordPayment: builder.mutation<any, { orderId: number; amount: number }>({
+      query: ({ orderId, amount }) => ({
+        url: `/orders/${orderId}/pay`,
         method: "PATCH",
+        body: { amount },
       }),
       invalidatesTags: ["Order", "Supplier"],
+    }),
+    updateOrderStatus: builder.mutation<any, { orderId: number; status: string }>({
+      query: ({ orderId, status }) => ({
+        url: `/orders/${orderId}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: ["Order"],
+    }),
+    deleteOrder: builder.mutation<any, number>({
+      query: (orderId) => ({
+        url: `/orders/${orderId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Order", "Supplier"],
+    }),
+    updateOrder: builder.mutation<any, { id: number; body: Partial<OrderValues> }>({
+      query: ({ id, body }) => ({
+        url: `/orders/${id}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Order"],
     }),
     getSupplierBalance: builder.query<any, number>({
       query: (supplierId) => `/suppliers/${supplierId}/balance`,
@@ -54,5 +79,8 @@ export const {
   useGetOrdersQuery,
   useCreateOrderMutation,
   useRecordPaymentMutation,
+  useUpdateOrderStatusMutation,
+  useDeleteOrderMutation,
+  useUpdateOrderMutation,
   useGetSupplierBalanceQuery,
 } = ordersApi;

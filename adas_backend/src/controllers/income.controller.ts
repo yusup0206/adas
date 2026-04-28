@@ -26,9 +26,6 @@ export class IncomeController {
         productId: number;
         name_tm: string;
         name_ru: string;
-        sku: string;
-        buyPrice: number;
-        sellPrice: number;
         totalQuantity: number;
         totalCost: number;
         totalRevenue: number;
@@ -41,9 +38,8 @@ export class IncomeController {
 
       for (const item of orderItems) {
         const costPrice = Number(item.unitPrice);
-        const currentProduct = item.product as any;
-        const sellPrice = Number(currentProduct.sellPrice);
-        const buyPrice = Number(currentProduct.buyPrice);
+        const sellPrice = 0; // Removed from schema
+        const buyPrice = 0; // Removed from schema
 
         const quantity = item.quantity;
         const itemCost = costPrice * quantity;
@@ -61,7 +57,6 @@ export class IncomeController {
           supplier: i18n_fallback_name(item.purchaseOrder.supplier),
           productName_tm: item.product.name_tm,
           productName_ru: item.product.name_ru,
-          sku: item.product.sku,
           quantity,
           cost: itemCost,
           revenue: itemRevenue,
@@ -79,9 +74,6 @@ export class IncomeController {
             productId: item.productId,
             name_tm: item.product.name_tm,
             name_ru: item.product.name_ru,
-            sku: item.product.sku,
-            buyPrice,
-            sellPrice,
             totalQuantity: quantity,
             totalCost: itemCost,
             totalRevenue: itemRevenue,

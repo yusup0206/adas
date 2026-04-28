@@ -9,18 +9,19 @@ export interface OrderFilters {
   search?: string;
   page?: string;
   pageSize?: string;
+  status?: string;
 }
 
 export interface Order {
   id: number;
   supplierId: number;
   supplier?: Supplier;
-  type: "CASH" | "INSTALLMENT";
   totalPrice: number;
+  paidAmount: number;
+  status: "PENDING" | "RECEIVED";
   orderDate: string;
   isPaid: boolean;
   items: OrderItem[];
-  paymentPlan?: any;
 }
 
 export interface OrderItem {
@@ -30,9 +31,6 @@ export interface OrderItem {
     id: number;
     name_tm: string;
     name_ru: string;
-    sku: string;
-    buyPrice: number;
-    sellPrice: number;
     productionCountry_tm?: string;
     productionCountry_ru?: string;
   };
@@ -43,9 +41,7 @@ export interface OrderItem {
 
 export interface OrderValues {
   supplierId: number;
-  type: "CASH" | "INSTALLMENT";
   totalPrice: number;
-  durationMonths?: number;
   items: {
     productId: number;
     quantity: number;

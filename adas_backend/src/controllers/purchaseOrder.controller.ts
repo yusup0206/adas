@@ -1,26 +1,14 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { purchaseOrderService } from '../services/purchaseOrder.service';
-import { OrderType } from '@prisma/client';
-
 const CreateOrderSchema = z.object({
   supplierId: z.coerce.number(),
-  type: z.nativeEnum(OrderType),
   totalPrice: z.coerce.number().positive(),
-  durationMonths: z.coerce.number().min(3).max(12).optional(),
   items: z.array(z.object({
     productId: z.coerce.number(),
     quantity: z.coerce.number().int().positive(),
     unitPrice: z.coerce.number().positive(),
   })).min(1),
-}).refine(data => {
-  if (data.type === OrderType.INSTALLMENT && !data.durationMonths) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Duration months is required for installment orders",
-  path: ["durationMonths"],
 });
 
 export class PurchaseOrderController {
@@ -41,7 +29,42 @@ export class PurchaseOrderController {
   async recordPayment(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const result = await purchaseOrderService.recordPayment(Number(id));
+      const { amount } = req.body;
+      const result = await purchaseOrderService.recordPayment(Number(id), Number(amount));
+      res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async updateOrderStatus(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const result = await purchaseOrderService.updateOrderStatus(Number(id), status);
+      res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async deleteOrder(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      await purchaseOrderService.deleteOrder(Number(id));
+      res.status(204).send();
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async updateOrder(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await purchaseOrderService.updateOrder(Number(id), req.body);
       res.status(200).json(result);
     } catch (error) {
       console.error(error);
@@ -61,10 +84,11 @@ export class PurchaseOrderController {
   }
   async getAllOrders(req: Request, res: Response) {
     try {
-      const { page, pageSize } = req.query;
+      const { page, pageSize, status } = req.query;
       const filters = {
         page: page ? Number(page) : undefined,
         pageSize: pageSize ? Number(pageSize) : undefined,
+        status: status as string,
       };
       const result = await purchaseOrderService.getAllPurchaseOrders(filters);
       res.status(200).json(result);

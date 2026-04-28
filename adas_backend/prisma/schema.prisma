@@ -23,45 +23,28 @@ model Product {
   id                   Int                 @id @default(autoincrement())
   name_tm              String
   name_ru              String
-  sku                  String              @unique
-  buyPrice             Decimal             @db.Decimal(15, 2)
-  sellPrice            Decimal             @db.Decimal(15, 2)
   unit                 Measurement?        @relation(fields: [unitId], references: [id])
   unitId               Int?
   productionCountry_tm String              @default("")
   productionCountry_ru String              @default("")
-  warehouse            Warehouse           @relation(fields: [warehouseId], references: [id])
-  warehouseId          Int
   items                PurchaseOrderItem[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 }
 
-model Warehouse {
-  id         Int       @id @default(autoincrement())
-  name_tm    String
-  name_ru    String
-  address_tm String    @default("")
-  address_ru String    @default("")
-  location   String?
-  products   Product[]
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-}
-
-enum OrderType {
-  CASH
-  INSTALLMENT
+enum OrderStatus {
+  PENDING
+  RECEIVED
 }
 
 model PurchaseOrder {
   id          Int                 @id @default(autoincrement())
   supplier    Supplier            @relation(fields: [supplierId], references: [id])
   supplierId  Int
-  type        OrderType
   totalPrice  Decimal             @db.Decimal(15, 2)
+  paidAmount  Decimal             @default(0) @db.Decimal(15, 2)
+  status      OrderStatus         @default(PENDING)
   items       PurchaseOrderItem[]
-  paymentPlan PaymentPlan?
   agreement   Agreement?          @relation(fields: [agreementId], references: [id])
   agreementId Int?
   orderDate   DateTime            @default(now())
@@ -80,33 +63,7 @@ model PurchaseOrderItem {
   totalPrice      Decimal       @db.Decimal(15, 2)
 }
 
-model PaymentPlan {
-  id              Int           @id @default(autoincrement())
-  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
-  purchaseOrderId Int           @unique
-  durationMonths  Int
-  installments    Installment[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
 
-enum PaymentStatus {
-  PENDING
-  PAID
-  OVERDUE
-}
-
-model Installment {
-  id             Int           @id @default(autoincrement())
-  paymentPlan    PaymentPlan   @relation(fields: [paymentPlanId], references: [id])
-  paymentPlanId  Int
-  amount         Decimal       @db.Decimal(15, 2)
-  dueDate        DateTime
-  status         PaymentStatus @default(PENDING)
-  paymentDate    DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-}
 
 model Client {
   id                   Int         @id @default(autoincrement())

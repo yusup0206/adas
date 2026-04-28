@@ -5,13 +5,9 @@ import { z } from 'zod';
 const ProductSchema = z.object({
   name_tm: z.string().min(1),
   name_ru: z.string().min(1),
-  sku: z.string().min(1),
-  buyPrice: z.coerce.number().nonnegative(),
-  sellPrice: z.coerce.number().positive(),
   unitId: z.coerce.number().int().positive().optional().nullable(),
   productionCountry_tm: z.string().optional().default(""),
   productionCountry_ru: z.string().optional().default(""),
-  warehouseId: z.coerce.number().int().positive(),
 });
 
 export class ProductController {

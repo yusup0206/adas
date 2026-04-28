@@ -6,7 +6,6 @@ import { productsApi } from "./services/productsApi";
 import { ordersApi } from "./services/ordersApi";
 import { agreementApi } from "./services/agreementApi";
 import { suppliersApi } from "./services/suppliersApi";
-import { warehousesApi } from "./services/warehousesApi";
 import { incomeApi } from "./services/incomeApi";
 
 export const store = configureStore({
@@ -17,7 +16,6 @@ export const store = configureStore({
     [ordersApi.reducerPath]: ordersApi.reducer,
     [agreementApi.reducerPath]: agreementApi.reducer,
     [suppliersApi.reducerPath]: suppliersApi.reducer,
-    [warehousesApi.reducerPath]: warehousesApi.reducer,
     [incomeApi.reducerPath]: incomeApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -28,7 +26,6 @@ export const store = configureStore({
       ordersApi.middleware,
       agreementApi.middleware,
       suppliersApi.middleware,
-      warehousesApi.middleware,
       incomeApi.middleware,
     ),
 });

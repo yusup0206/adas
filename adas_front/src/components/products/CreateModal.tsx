@@ -1,6 +1,5 @@
 import type { ProductValues } from "@/interfaces/products.interface";
 import { useCreateProductMutation } from "@/services/productsApi";
-import { useGetWarehousesQuery } from "@/services/warehousesApi";
 import { useGetUnitsQuery } from "@/services/unitsApi";
 import { App, Button, Form, Input, Modal, Select, InputNumber } from "antd";
 import { useState } from "react";
@@ -17,7 +16,6 @@ const CreateModal = () => {
   const [openModal, setOpenModal] = useState(false);
 
   // queries
-  const { data: warehouses } = useGetWarehousesQuery();
   const { data: units } = useGetUnitsQuery();
   const [create] = useCreateProductMutation();
 
@@ -75,30 +73,7 @@ const CreateModal = () => {
           >
             <Input className="w-full" allowClear />
           </Form.Item>
-          <Form.Item
-            name="sku"
-            className="col-span-12 m-0"
-            label="SKU"
-            rules={[{ required: true, message: t("required_field") }]}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-          <Form.Item
-            name="buyPrice"
-            className="col-span-6 m-0"
-            label={t("buy_price")}
-            rules={[{ required: true, message: t("required_field") }]}
-          >
-            <InputNumber step={0.01} className="w-full" />
-          </Form.Item>
-          <Form.Item
-            name="sellPrice"
-            className="col-span-6 m-0"
-            label={t("sell_price")}
-            rules={[{ required: true, message: t("required_field") }]}
-          >
-            <InputNumber step={0.01} className="w-full" />
-          </Form.Item>
+
           <Form.Item
             name="unitId"
             className="col-span-6 m-0"
@@ -113,21 +88,7 @@ const CreateModal = () => {
               allowClear
             />
           </Form.Item>
-          <Form.Item
-            name="warehouseId"
-            className="col-span-6 m-0"
-            label={t("warehouse")}
-            rules={[{ required: true, message: t("required_field") }]}
-          >
-            <Select
-              placeholder={t("select_warehouse")}
-              options={warehouses?.list?.map((w: any) => ({
-                value: w.id,
-                label: i18n.language === "ru" ? w.name_ru : w.name_tm,
-              }))}
-              allowClear
-            />
-          </Form.Item>
+
           <Form.Item
             name="productionCountry_tm"
             className="col-span-6 m-0"

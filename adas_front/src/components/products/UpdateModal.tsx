@@ -1,6 +1,5 @@
 import type { Product, ProductValues } from "@/interfaces/products.interface";
 import { useUpdateProductMutation } from "@/services/productsApi";
-import { useGetWarehousesQuery } from "@/services/warehousesApi";
 import { useGetUnitsQuery } from "@/services/unitsApi";
 import { App, Button, Form, Input, Modal, Select, InputNumber } from "antd";
 import { useState } from "react";
@@ -17,7 +16,6 @@ const UpdateModal = ({ record }: { record: Product }) => {
   const [openModal, setOpenModal] = useState(false);
 
   // queries
-  const { data: warehouses } = useGetWarehousesQuery();
   const { data: units } = useGetUnitsQuery();
   const [update] = useUpdateProductMutation();
 
@@ -36,11 +34,7 @@ const UpdateModal = ({ record }: { record: Product }) => {
     form.setFieldsValue({
       name_tm: record.name_tm,
       name_ru: record.name_ru,
-      sku: record.sku,
-      buyPrice: record.buyPrice,
-      sellPrice: record.sellPrice,
       unitId: record.unitId,
-      warehouseId: record.warehouseId,
       productionCountry_tm: record.productionCountry_tm,
       productionCountry_ru: record.productionCountry_ru,
     });
@@ -82,15 +76,7 @@ const UpdateModal = ({ record }: { record: Product }) => {
           <Form.Item name="name_ru" className="col-span-6 m-0" label={`${t("name")} (RU)`}>
             <Input className="w-full" allowClear />
           </Form.Item>
-          <Form.Item name="sku" className="col-span-12 m-0" label="SKU">
-            <Input className="w-full" allowClear />
-          </Form.Item>
-          <Form.Item name="buyPrice" className="col-span-6 m-0" label={t("buy_price")}>
-            <InputNumber step={0.01} className="w-full" />
-          </Form.Item>
-          <Form.Item name="sellPrice" className="col-span-6 m-0" label={t("sell_price")}>
-            <InputNumber step={0.01} className="w-full" />
-          </Form.Item>
+
           <Form.Item
             name="unitId"
             className="col-span-6 m-0"
@@ -105,20 +91,7 @@ const UpdateModal = ({ record }: { record: Product }) => {
               allowClear
             />
           </Form.Item>
-          <Form.Item
-            name="warehouseId"
-            className="col-span-6 m-0"
-            label={t("warehouse")}
-          >
-            <Select
-              placeholder={t("select_warehouse")}
-              options={warehouses?.list?.map((w: any) => ({
-                value: w.id,
-                label: i18n.language === "ru" ? w.name_ru : w.name_tm,
-              }))}
-              allowClear
-            />
-          </Form.Item>
+
           <Form.Item
             name="productionCountry_tm"
             className="col-span-6 m-0"

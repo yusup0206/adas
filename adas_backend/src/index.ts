@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { purchaseOrderController } from './controllers/purchaseOrder.controller';
 import { supplierController } from './controllers/supplier.controller';
-import { warehouseController } from './controllers/warehouse.controller';
 import { productController } from './controllers/product.controller';
 import { clientController } from './controllers/client.controller';
 import { measurementController } from './controllers/measurement.controller';
@@ -43,12 +42,6 @@ app.post('/api/suppliers', (req, res) => supplierController.create(req, res));
 app.patch('/api/suppliers/:id', (req, res) => supplierController.update(req, res));
 app.delete('/api/suppliers/:id', (req, res) => supplierController.delete(req, res));
 
-app.get('/api/warehouses', (req, res) => warehouseController.getAll(req, res));
-app.get('/api/warehouses/:id', (req, res) => warehouseController.getById(req, res));
-app.post('/api/warehouses', (req, res) => warehouseController.create(req, res));
-app.patch('/api/warehouses/:id', (req, res) => warehouseController.update(req, res));
-app.delete('/api/warehouses/:id', (req, res) => warehouseController.delete(req, res));
-
 app.get('/api/products', (req, res) => productController.getAll(req, res));
 app.get('/api/products/:id', (req, res) => productController.getById(req, res));
 app.post('/api/products', (req, res) => productController.create(req, res));
@@ -57,7 +50,10 @@ app.delete('/api/products/:id', (req, res) => productController.delete(req, res)
 
 app.get('/api/orders', (req, res) => purchaseOrderController.getAllOrders(req, res));
 app.post('/api/orders', (req, res) => purchaseOrderController.createOrder(req, res));
-app.patch('/api/installments/:id/pay', (req, res) => purchaseOrderController.recordPayment(req, res));
+app.patch('/api/orders/:id/pay', (req, res) => purchaseOrderController.recordPayment(req, res));
+app.patch('/api/orders/:id/status', (req, res) => purchaseOrderController.updateOrderStatus(req, res));
+app.patch('/api/orders/:id', (req, res) => purchaseOrderController.updateOrder(req, res));
+app.delete('/api/orders/:id', (req, res) => purchaseOrderController.deleteOrder(req, res));
 app.get('/api/suppliers/:id/balance', (req, res) => purchaseOrderController.getSupplierBalance(req, res));
 
 app.get('/api/income', (req, res) => incomeController.getIncomeSummary(req, res));

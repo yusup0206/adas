@@ -65,11 +65,7 @@ const Products = () => {
       render: (_, record) => (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
     },
 
-    {
-      title: "SKU",
-      dataIndex: "sku",
-      key: "sku",
-    },
+
 
     {
       title: t("unit"),
@@ -87,12 +83,7 @@ const Products = () => {
         (currentLang === "ru" ? record.productionCountry_ru : record.productionCountry_tm) || "-",
     },
 
-    {
-      title: t("price"),
-      dataIndex: "sellPrice",
-      key: "sellPrice",
-      render: (sellPrice: number) => `${sellPrice} TMT`,
-    },
+
 
     {
       title: t("actions"),

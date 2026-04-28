@@ -13,7 +13,6 @@ const Orders = lazy(() => import("@/pages/Orders"));
 const Agreements = lazy(() => import("@/pages/Agreements"));
 const AgreementViewOne = lazy(() => import("@/pages/AgreementViewOne"));
 const Suppliers = lazy(() => import("@/pages/Suppliers"));
-const Warehouses = lazy(() => import("@/pages/Warehouses"));
 const Income = lazy(() => import("@/pages/Income"));
 
 const Home = lazy(() => import("@/pages/Home"));
@@ -41,7 +40,6 @@ function Router() {
         { path: "agreements", element: <Agreements /> },
         { path: "agreements/:id", element: <AgreementViewOne /> },
         { path: "suppliers", element: <Suppliers /> },
-        { path: "warehouses", element: <Warehouses /> },
         { path: "income", element: <Income /> },
 
         { path: "home", element: <Home /> },

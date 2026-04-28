@@ -1,21 +1,19 @@
-import { OrderType, PaymentStatus, Prisma } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 import prisma from '../utils/prismaClient';
 
 export class PurchaseOrderService {
   async createPurchaseOrder(data: {
     supplierId: number;
-    type: OrderType;
     totalPrice: number;
-    durationMonths?: number;
     items: { productId: number; quantity: number; unitPrice: number }[];
   }) {
     return await prisma.$transaction(async (tx) => {
-      // 1. Create the Purchase Order
       const order = await tx.purchaseOrder.create({
         data: {
           supplierId: data.supplierId,
-          type: data.type,
           totalPrice: data.totalPrice,
+          paidAmount: 0,
+          status: 'PENDING',
           items: {
             create: data.items.map((item) => ({
               productId: item.productId,
@@ -27,30 +25,6 @@ export class PurchaseOrderService {
         },
       });
 
-      // 2. Handle Installments if type is INSTALLMENT
-      if (data.type === 'INSTALLMENT' && data.durationMonths) {
-        const installmentAmount = new Prisma.Decimal(data.totalPrice).div(data.durationMonths);
-        
-        await tx.paymentPlan.create({
-          data: {
-            purchaseOrderId: order.id,
-            durationMonths: data.durationMonths,
-            installments: {
-              create: Array.from({ length: data.durationMonths }).map((_, i) => {
-                const dueDate = new Date();
-                dueDate.setMonth(dueDate.getMonth() + i + 1);
-                return {
-                  amount: installmentAmount,
-                  dueDate,
-                  status: PaymentStatus.PENDING,
-                };
-              }),
-            },
-          },
-        });
-      }
-
-      // 3. Update Supplier balance
       await tx.supplier.update({
         where: { id: data.supplierId },
         data: {
@@ -63,54 +37,83 @@ export class PurchaseOrderService {
     });
   }
 
-  async recordPayment(installmentId: number) {
+  async recordPayment(orderId: number, amount: number) {
     return await prisma.$transaction(async (tx) => {
-      // 1. Update installment status
-      const installment = await tx.installment.update({
-        where: { id: installmentId },
+      const order = await tx.purchaseOrder.findUnique({ where: { id: orderId } });
+      if (!order) throw new Error("Order not found");
+
+      const updatedOrder = await tx.purchaseOrder.update({
+        where: { id: orderId },
         data: {
-          status: PaymentStatus.PAID,
-          paymentDate: new Date(),
-        },
-        include: {
-          paymentPlan: {
-            include: {
-              purchaseOrder: true,
-            },
-          },
+          paidAmount: { increment: amount },
         },
       });
 
-      // 2. Update Supplier balance
       await tx.supplier.update({
-        where: { id: installment.paymentPlan.purchaseOrder.supplierId },
+        where: { id: order.supplierId },
         data: {
-          paidAmount: { increment: installment.amount },
-          remainingDebt: { decrement: installment.amount },
+          paidAmount: { increment: amount },
+          remainingDebt: { decrement: amount },
         },
       });
 
-      return installment;
+      return updatedOrder;
     });
   }
 
-  async getAllPurchaseOrders(filters: { page?: number; pageSize?: number } = {}) {
-    const { page = 1, pageSize = 10 } = filters;
+  async updateOrderStatus(orderId: number, status: OrderStatus) {
+    return await prisma.purchaseOrder.update({
+      where: { id: orderId },
+      data: { status },
+    });
+  }
+
+  async deleteOrder(orderId: number) {
+    return await prisma.$transaction(async (tx) => {
+      const order = await tx.purchaseOrder.findUnique({
+        where: { id: orderId },
+        include: { items: true },
+      });
+      if (!order) throw new Error("Order not found");
+
+      // Revert supplier balance
+      await tx.supplier.update({
+        where: { id: order.supplierId },
+        data: {
+          totalAmount: { decrement: order.totalPrice },
+          paidAmount: { decrement: order.paidAmount },
+          remainingDebt: { decrement: new Prisma.Decimal(order.totalPrice).minus(order.paidAmount) },
+        },
+      });
+
+      await tx.purchaseOrderItem.deleteMany({ where: { purchaseOrderId: orderId } });
+      return await tx.purchaseOrder.delete({ where: { id: orderId } });
+    });
+  }
+
+  async updateOrder(orderId: number, data: { totalPrice?: number; status?: OrderStatus }) {
+    // Basic update logic, adjusting items might be complex and require a separate endpoint
+    return await prisma.purchaseOrder.update({
+      where: { id: orderId },
+      data,
+    });
+  }
+
+  async getAllPurchaseOrders(filters: { page?: number; pageSize?: number; status?: string } = {}) {
+    const { page = 1, pageSize = 10, status } = filters;
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
+    const where: Prisma.PurchaseOrderWhereInput = status && status !== 'ALL' ? { status: status as OrderStatus } : {};
+
     const [orders, total] = await Promise.all([
       prisma.purchaseOrder.findMany({
+        where,
         include: {
           supplier: true,
           items: {
             include: {
               product: true,
-            },
-          },
-          paymentPlan: {
-            include: {
-              installments: true,
             },
           },
         },
@@ -120,20 +123,11 @@ export class PurchaseOrderService {
         skip,
         take,
       }),
-      prisma.purchaseOrder.count(),
+      prisma.purchaseOrder.count({ where }),
     ]);
 
     const list = orders.map((order) => {
-      let isPaid: boolean;
-      if (order.type === 'CASH') {
-        isPaid = true;
-      } else if (order.paymentPlan) {
-        const installments = order.paymentPlan.installments;
-        isPaid =
-          installments.length > 0 && installments.every((i) => i.status === 'PAID');
-      } else {
-        isPaid = false;
-      }
+      const isPaid = new Prisma.Decimal(order.totalPrice).equals(order.paidAmount);
       return { ...order, isPaid };
     });
 

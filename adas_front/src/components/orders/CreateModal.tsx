@@ -13,7 +13,6 @@ const CreateModal = () => {
   const [form] = Form.useForm();
 
   const [openModal, setOpenModal] = useState(false);
-  const [orderType, setOrderType] = useState<"CASH" | "INSTALLMENT">("CASH");
 
   // queries
   const { data: products } = useGetProductsQuery({ pageSize: "100" });
@@ -27,7 +26,6 @@ const CreateModal = () => {
       const updatedItems = [...currentItems];
       updatedItems[fieldIndex] = {
         ...updatedItems[fieldIndex],
-        unitPrice: product.buyPrice, // Default to buyPrice as it's a purchase order
       };
       form.setFieldsValue({ items: updatedItems });
     }
@@ -84,7 +82,7 @@ const CreateModal = () => {
           form={form}
           layout="vertical"
           onFinish={handleCreate}
-          initialValues={{ type: "CASH", items: [{}] }}
+          initialValues={{ items: [{}] }}
         >
           <div className="grid grid-cols-2 gap-4">
             <Form.Item
@@ -103,36 +101,7 @@ const CreateModal = () => {
               />
             </Form.Item>
 
-            <Form.Item
-              name="type"
-              label={t("payment_type")}
-              rules={[{ required: true }]}
-            >
-              <Select
-                onChange={(val) => setOrderType(val)}
-                options={[
-                  { value: "CASH", label: t("cash") },
-                  { value: "INSTALLMENT", label: t("installment") },
-                ]}
-              />
-            </Form.Item>
 
-            {orderType === "INSTALLMENT" && (
-              <Form.Item
-                name="durationMonths"
-                label={t("duration_months")}
-                rules={[{ required: true, message: t("required_field") }]}
-              >
-                <Select
-                  options={[
-                    { value: 3, label: `3 ${t("months")}` },
-                    { value: 6, label: `6 ${t("months")}` },
-                    { value: 9, label: `9 ${t("months")}` },
-                    { value: 12, label: `12 ${t("months")}` },
-                  ]}
-                />
-              </Form.Item>
-            )}
           </div>
 
           <Divider orientation="left">{t("products")}</Divider>

@@ -4,7 +4,7 @@ export class ProductRepository {
   async findById(id: number) {
     return await prisma.product.findUnique({
       where: { id },
-      include: { warehouse: true, unit: true },
+      include: { unit: true },
     });
   }
 
@@ -17,7 +17,6 @@ export class ProductRepository {
           OR: [
             { name_tm: { contains: search } },
             { name_ru: { contains: search } },
-            { sku: { contains: search } },
           ],
         }
       : {};
@@ -27,7 +26,7 @@ export class ProductRepository {
         where,
         skip,
         take: pageSize,
-        include: { warehouse: true, unit: true },
+        include: { unit: true },
         orderBy: { createdAt: 'desc' },
       }),
       prisma.product.count({ where }),
@@ -39,13 +38,9 @@ export class ProductRepository {
   async create(data: {
     name_tm: string;
     name_ru: string;
-    sku: string;
-    buyPrice: number;
-    sellPrice: number;
     unitId?: number | null;
     productionCountry_tm?: string;
     productionCountry_ru?: string;
-    warehouseId: number;
   }) {
     return await prisma.product.create({
       data,
@@ -55,13 +50,9 @@ export class ProductRepository {
   async update(id: number, data: {
     name_tm?: string;
     name_ru?: string;
-    sku?: string;
-    buyPrice?: number;
-    sellPrice?: number;
     unitId?: number | null;
     productionCountry_tm?: string;
     productionCountry_ru?: string;
-    warehouseId?: number;
   }) {
     return await prisma.product.update({
       where: { id },

@@ -54,11 +54,6 @@ export class AgreementRepository {
                 product: true,
               },
             },
-            paymentPlan: {
-              include: {
-                installments: true,
-              },
-            },
           },
         },
       },
