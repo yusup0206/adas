@@ -14,6 +14,7 @@ import {
 } from "@/services/suppliersApi";
 import DeleteModal from "@/components/shared/DeleteModal";
 import CreateModal from "@/components/suppliers/CreateModal";
+import UpdateModal from "@/components/suppliers/UpdateModal";
 
 const Suppliers = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,7 +45,8 @@ const Suppliers = () => {
   }, [filters, setSearchParams]);
 
   // queries
-  const { data: suppliersData, isLoading: suppliersLoading } = useGetSuppliersQuery(filters);
+  const { data: suppliersData, isLoading: suppliersLoading } =
+    useGetSuppliersQuery(filters);
   const [deleteSupplier] = useDeleteSupplierMutation();
 
   // table data
@@ -61,25 +63,8 @@ const Suppliers = () => {
       title: t("name"),
       dataIndex: `name_${currentLang}`,
       key: "name",
-      render: (_, record) => (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
-    },
-
-    {
-      title: t("totalAmount"),
-      dataIndex: "totalAmount",
-      key: "totalAmount",
-      render: (amount: number) => `${Number(amount).toFixed(2)}`,
-    },
-
-    {
-      title: t("remainingDebt"),
-      dataIndex: "remainingDebt",
-      key: "remainingDebt",
-      render: (amount: number) => (
-        <span className={Number(amount) > 0 ? "text-red-500 font-bold" : "text-green-500"}>
-          {Number(amount).toFixed(2)}
-        </span>
-      ),
+      render: (_, record) =>
+        (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
     },
 
     {
@@ -87,7 +72,7 @@ const Suppliers = () => {
       key: "action",
       render: (_, record) => (
         <div className="flex gap-4 items-center justify-start text-textColor">
-          {/* Add UpdateModal later */}
+          <UpdateModal record={record} />
           <DeleteModal id={record.id} onDelete={deleteSupplier} />
         </div>
       ),
@@ -107,7 +92,13 @@ const Suppliers = () => {
                   size="large"
                   placeholder={t("search")}
                   value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: "1" }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      search: e.target.value,
+                      page: "1",
+                    }))
+                  }
                   allowClear
                 />
               </div>

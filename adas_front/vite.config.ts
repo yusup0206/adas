@@ -13,12 +13,5 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    proxy: {
-      "/v1": {
-        // target: "http://192.168.12.132:8888",
-        target: "http://127.0.0.1:8888",
-        changeOrigin: true,
-      },
-    },
   },
 });

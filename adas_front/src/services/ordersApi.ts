@@ -23,6 +23,8 @@ export const ordersApi = createApi({
           if (filters.pageSize)
             params.append("pageSize", filters.pageSize.toString());
           if (filters.status) params.append("status", filters.status);
+          if (filters.isPaid !== undefined)
+            params.append("isPaid", filters.isPaid.toString());
 
           if (params.toString()) queryString += `?${params.toString()}`;
         }
@@ -72,6 +74,14 @@ export const ordersApi = createApi({
     getSupplierBalance: builder.query<any, number>({
       query: (supplierId) => `/suppliers/${supplierId}/balance`,
     }),
+    getDebtSummary: builder.query<
+      { totalDebt: number; totalPaid: number; unpaidOrdersCount: number },
+      void
+    >({
+      query: () => `/orders/debt-summary`,
+      providesTags: ["Order"],
+      keepUnusedDataFor: 60,
+    }),
   }),
 });
 
@@ -83,4 +93,6 @@ export const {
   useDeleteOrderMutation,
   useUpdateOrderMutation,
   useGetSupplierBalanceQuery,
+  useGetDebtSummaryQuery,
 } = ordersApi;
+

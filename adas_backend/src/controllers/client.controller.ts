@@ -5,25 +5,20 @@ import { z } from 'zod';
 const ClientSchema = z.object({
   name_tm: z.string().min(1),
   name_ru: z.string().min(1),
-  directorName_tm: z.string().optional().default(""),
-  directorName_ru: z.string().optional().default(""),
   address_tm: z.string().optional().default(""),
   address_ru: z.string().optional().default(""),
-  bankName_tm: z.string().optional().default(""),
-  bankName_ru: z.string().optional().default(""),
-  swift: z.string().optional().default(""),
-  accountNo: z.string().optional().default(""),
-  currentAccount: z.string().optional().default(""),
-  correspondentAccount: z.string().optional().default(""),
-  bankIdCode: z.string().optional().default(""),
-  individualIdNumber: z.string().optional().default(""),
 });
 
 export class ClientController {
   async getAll(req: Request, res: Response) {
     try {
-      const clients = await clientRepository.getAll();
-      res.json({ list: clients, total: clients.length });
+      const { search, page, pageSize } = req.query;
+      const clients = await clientRepository.getAll({
+        search: search as string,
+        page: page ? Number(page) : undefined,
+        pageSize: pageSize ? Number(pageSize) : undefined,
+      });
+      res.json(clients);
     } catch (error) {
       res.status(500).json({ message: 'Internal server error' });
     }

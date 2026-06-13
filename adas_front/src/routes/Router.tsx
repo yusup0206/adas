@@ -10,16 +10,16 @@ const Clients = lazy(() => import("@/pages/Clients"));
 const Units = lazy(() => import("@/pages/Units"));
 const Products = lazy(() => import("@/pages/Products"));
 const Orders = lazy(() => import("@/pages/Orders"));
-const Agreements = lazy(() => import("@/pages/Agreements"));
-const AgreementViewOne = lazy(() => import("@/pages/AgreementViewOne"));
 const Suppliers = lazy(() => import("@/pages/Suppliers"));
 const Income = lazy(() => import("@/pages/Income"));
+const Warehouses = lazy(() => import("@/pages/Warehouses"));
+const Debt = lazy(() => import("@/pages/Debt"));
 
 const Home = lazy(() => import("@/pages/Home"));
 
 function Router() {
   const routes = useRoutes([
-    { path: "/", element: <Navigate to="/clients" replace /> },
+    { path: "/", element: <Navigate to="/income" replace /> },
 
     { path: "/login", element: <Login /> },
 
@@ -37,10 +37,10 @@ function Router() {
         { path: "units", element: <Units /> },
         { path: "products", element: <Products /> },
         { path: "orders", element: <Orders /> },
-        { path: "agreements", element: <Agreements /> },
-        { path: "agreements/:id", element: <AgreementViewOne /> },
         { path: "suppliers", element: <Suppliers /> },
         { path: "income", element: <Income /> },
+        { path: "warehouses", element: <Warehouses /> },
+        { path: "debt", element: <Debt /> },
 
         { path: "home", element: <Home /> },
       ],

@@ -1,176 +1,282 @@
 import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
-import {
-  Card,
-  Spin,
-  Table,
-  type TableProps,
-  Tag,
-  Space,
-  Typography,
-  Tabs,
-} from "antd";
+import { Table, Tag, Tabs, Space } from "antd";
+import type { TableProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { useGetIncomeSummaryQuery } from "@/services/incomeApi";
 import type {
   IncomeProduct,
-  IncomeTransaction,
+  IncomeSale,
+  IncomePurchase,
 } from "@/interfaces/income.interface";
 import {
   FaArrowTrendUp,
   FaArrowTrendDown,
   FaChartLine,
   FaBoxOpen,
-  FaBookOpen,
+  FaCartShopping,
+  FaTruckFast,
 } from "react-icons/fa6";
 
-const { Title, Text } = Typography;
+// ── Stat card (matches Debt page pattern) ─────────────────────────────────
+const StatCard = ({
+  icon,
+  label,
+  value,
+  color,
+  bg,
+  sub,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  color: string;
+  bg: string;
+  sub?: string;
+}) => (
+  <div className="flex items-center gap-4 rounded-xl border border-borderColor bg-bgColor p-5 shadow-sm flex-1 min-w-0">
+    <div
+      className={`flex items-center justify-center rounded-full p-3 ${bg} shrink-0`}
+    >
+      <span className={`text-2xl ${color}`}>{icon}</span>
+    </div>
+    <div className="min-w-0">
+      <p className="text-sm text-gray-500 truncate">{label}</p>
+      <p className={`text-xl font-bold truncate ${color}`}>{value}</p>
+      {sub && <p className="text-xs text-gray-400 truncate mt-0.5">{sub}</p>}
+    </div>
+  </div>
+);
 
+// ── Main Income page ───────────────────────────────────────────────────────
 const Income = () => {
   const { t, i18n } = useTranslation();
-  const currentLang = i18n.language === "ru" ? "ru" : "tm";
+  const isRu = i18n.language === "ru";
 
   const { data, isLoading } = useGetIncomeSummaryQuery();
 
+  // ── Products table columns ───────────────────────────────────────────────
   const productColumns: TableProps<IncomeProduct>["columns"] = [
     {
       title: "№",
       key: "index",
-      render: (_: unknown, __: unknown, index: number) => index + 1,
-      width: 60,
+      width: 55,
+      render: (_: unknown, __: unknown, i: number) => (
+        <span className="text-gray-400 font-medium">{i + 1}</span>
+      ),
     },
     {
       title: t("name"),
       key: "name",
-      render: (_, record) =>
-        currentLang === "ru" ? record.name_ru : record.name_tm,
-    },
-    {
-      title: "SKU",
-      dataIndex: "sku",
-      key: "sku",
-    },
-    {
-      title: t("buy_price"),
-      dataIndex: "buyPrice",
-      key: "buyPrice",
-      render: (val: number) => `${Number(val).toFixed(2)} TMT`,
-    },
-    {
-      title: t("sell_price"),
-      dataIndex: "sellPrice",
-      key: "sellPrice",
-      render: (val: number) => `${Number(val).toFixed(2)} TMT`,
+      render: (_, r) => (
+        <span className="font-semibold">
+          {isRu ? r.name_ru : r.name_tm}
+        </span>
+      ),
     },
     {
       title: t("quantity_sold"),
-      dataIndex: "totalQuantity",
-      key: "totalQuantity",
-      render: (val: number) => (
+      dataIndex: "quantitySold",
+      key: "quantitySold",
+      render: (v: number) => (
         <Tag color="processing" style={{ borderRadius: 6 }}>
-          {val}
+          {v}
         </Tag>
       ),
     },
     {
-      title: t("total_cost"),
-      dataIndex: "totalCost",
-      key: "totalCost",
-      render: (val: number) => (
-        <Text type="danger" strong>
-          {Number(val).toFixed(2)} TMT
-        </Text>
+      title: t("quantity_purchased"),
+      dataIndex: "quantityPurchased",
+      key: "quantityPurchased",
+      render: (v: number) => (
+        <Tag color="default" style={{ borderRadius: 6 }}>
+          {v}
+        </Tag>
       ),
     },
     {
       title: t("total_revenue"),
       dataIndex: "totalRevenue",
       key: "totalRevenue",
-      render: (val: number) => (
-        <Text type="success" strong>
-          {Number(val).toFixed(2)} TMT
-        </Text>
+      render: (v: number) => (
+        <span className="text-green-600 font-semibold">
+          {Number(v).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("total_cost"),
+      dataIndex: "totalCost",
+      key: "totalCost",
+      render: (v: number) => (
+        <span className="text-red-500 font-semibold">
+          {Number(v).toFixed(2)} TMT
+        </span>
       ),
     },
     {
       title: t("total_profit"),
       dataIndex: "totalProfit",
       key: "totalProfit",
-      render: (val: number) => (
+      render: (v: number) => (
         <Tag
-          color={val >= 0 ? "success" : "error"}
+          color={v >= 0 ? "success" : "error"}
           style={{ borderRadius: 6, fontWeight: "bold" }}
         >
-          {val >= 0 ? "+" : ""}
-          {Number(val).toFixed(2)} TMT
+          {v >= 0 ? "+" : ""}
+          {Number(v).toFixed(2)} TMT
         </Tag>
       ),
     },
   ];
 
-  const transactionColumns: TableProps<IncomeTransaction>["columns"] = [
+  // ── Sales table columns ──────────────────────────────────────────────────
+  const salesColumns: TableProps<IncomeSale>["columns"] = [
     {
-      title: t("id"),
-      dataIndex: "orderId",
-      key: "orderId",
-      render: (id) => <Tag color="default">#{id}</Tag>,
-      width: 100,
+      title: "№",
+      key: "index",
+      width: 55,
+      render: (_: unknown, __: unknown, i: number) => (
+        <span className="text-gray-400 font-medium">{i + 1}</span>
+      ),
     },
     {
       title: t("date"),
       dataIndex: "date",
       key: "date",
-      render: (date) => new Date(date).toLocaleDateString(),
-    },
-    {
-      title: t("supplier"),
-      key: "supplier",
-      render: (_, record) =>
-        record.supplier?.[currentLang as keyof typeof record.supplier] || "-",
+      render: (d: string) => (
+        <span className="text-gray-600">
+          {new Date(d).toLocaleDateString()}
+        </span>
+      ),
     },
     {
       title: t("product"),
       key: "product",
-      render: (_, record) =>
-        currentLang === "ru" ? record.productName_ru : record.productName_tm,
+      render: (_, r) => (
+        <span className="font-semibold">
+          {isRu ? r.productName_ru : r.productName_tm}
+        </span>
+      ),
+    },
+    {
+      title: t("client"),
+      key: "client",
+      render: (_, r) =>
+        r.client ? (isRu ? r.client.ru : r.client.tm) : (
+          <span className="text-gray-400">—</span>
+        ),
     },
     {
       title: t("quantity"),
       dataIndex: "quantity",
       key: "quantity",
+      render: (v: number) => (
+        <Tag color="processing" style={{ borderRadius: 6 }}>
+          {v}
+        </Tag>
+      ),
     },
     {
-      title: t("total_profit"),
-      dataIndex: "profit",
-      key: "profit",
-      render: (val: number) => (
-        <Text type={val >= 0 ? "success" : "danger"} strong>
-          {val >= 0 ? "+" : ""}
-          {Number(val).toFixed(2)} TMT
-        </Text>
+      title: t("sell_price"),
+      dataIndex: "sellPrice",
+      key: "sellPrice",
+      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+    },
+    {
+      title: t("total_sell_price"),
+      dataIndex: "totalSellPrice",
+      key: "totalSellPrice",
+      render: (v: number) => (
+        <span className="text-green-600 font-bold">
+          {Number(v).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("note"),
+      dataIndex: "note",
+      key: "note",
+      render: (v: string) =>
+        v ? v : <span className="text-gray-400">—</span>,
+    },
+  ];
+
+  // ── Purchases table columns ──────────────────────────────────────────────
+  const purchaseColumns: TableProps<IncomePurchase>["columns"] = [
+    {
+      title: "№",
+      key: "index",
+      width: 55,
+      render: (_: unknown, __: unknown, i: number) => (
+        <span className="text-gray-400 font-medium">{i + 1}</span>
+      ),
+    },
+    {
+      title: t("date"),
+      dataIndex: "date",
+      key: "date",
+      render: (d: string) => (
+        <span className="text-gray-600">
+          {new Date(d).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      title: t("order"),
+      dataIndex: "orderId",
+      key: "orderId",
+      render: (id: number) => <Tag color="default">#{id}</Tag>,
+    },
+    {
+      title: t("product"),
+      key: "product",
+      render: (_, r) => (
+        <span className="font-semibold">
+          {isRu ? r.productName_ru : r.productName_tm}
+        </span>
+      ),
+    },
+    {
+      title: t("supplier"),
+      key: "supplier",
+      render: (_, r) =>
+        r.supplier ? (isRu ? r.supplier.ru : r.supplier.tm) : (
+          <span className="text-gray-400">—</span>
+        ),
+    },
+    {
+      title: t("quantity"),
+      dataIndex: "quantity",
+      key: "quantity",
+      render: (v: number) => (
+        <Tag color="default" style={{ borderRadius: 6 }}>
+          {v}
+        </Tag>
+      ),
+    },
+    {
+      title: t("unit_price"),
+      dataIndex: "unitPrice",
+      key: "unitPrice",
+      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+    },
+    {
+      title: t("total_cost"),
+      dataIndex: "totalCost",
+      key: "totalCost",
+      render: (v: number) => (
+        <span className="text-red-500 font-bold">
+          {Number(v).toFixed(2)} TMT
+        </span>
       ),
     },
   ];
 
-  if (isLoading) {
-    return (
-      <section className="p-6">
-        <Header title={t("income")} />
-        <Section>
-          <Box>
-            <div className="flex items-center justify-center py-40">
-              <Spin size="large" tip="Loading financial data..." />
-            </div>
-          </Box>
-        </Section>
-      </section>
-    );
-  }
-
-  const items = [
+  const tabs = [
     {
-      key: "1",
+      key: "products",
       label: (
         <Space>
           <FaBoxOpen />
@@ -179,150 +285,115 @@ const Income = () => {
       ),
       children: (
         <Table
+          loading={isLoading}
           columns={productColumns}
           dataSource={data?.products || []}
           rowKey="productId"
-          pagination={{ position: ["bottomCenter"], pageSize: 12 }}
+          size="large"
+          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
           className="overflow-x-auto"
         />
       ),
     },
     {
-      key: "2",
+      key: "sales",
       label: (
         <Space>
-          <FaBookOpen />
-          {t("history")}
+          <FaTruckFast />
+          {t("sales")}
         </Space>
       ),
       children: (
         <Table
-          columns={transactionColumns}
-          dataSource={data?.transactions || []}
+          loading={isLoading}
+          columns={salesColumns}
+          dataSource={data?.sales || []}
           rowKey="id"
-          pagination={{ position: ["bottomCenter"], pageSize: 12 }}
+          size="large"
+          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          className="overflow-x-auto"
+        />
+      ),
+    },
+    {
+      key: "purchases",
+      label: (
+        <Space>
+          <FaCartShopping />
+          {t("purchases")}
+        </Space>
+      ),
+      children: (
+        <Table
+          loading={isLoading}
+          columns={purchaseColumns}
+          dataSource={data?.purchases || []}
+          rowKey="id"
+          size="large"
+          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
           className="overflow-x-auto"
         />
       ),
     },
   ];
 
+  const profit = data?.totalProfit ?? 0;
+
   return (
-    <section className="bg-gray-50 min-h-screen">
-      <Header title={t("income")} />
-      <Section>
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card
-            hoverable
-            className="shadow-lg border-0 overflow-hidden"
-            bodyStyle={{ padding: 0 }}
-            style={{ borderRadius: 20 }}
-          >
-            <div className="p-6 bg-linear-to-br from-blue-600 to-indigo-700 h-full">
-              <Space direction="vertical" size={0}>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {t("total_revenue")}
-                </Text>
-                <Title
-                  level={2}
-                  style={{ color: "#fff", margin: 0, marginTop: 4 }}
-                >
-                  {Number(data?.totalRevenue || 0).toLocaleString()}{" "}
-                  <span className="text-sm font-normal">TMT</span>
-                </Title>
-              </Space>
-              <div className="absolute right-6 bottom-6 opacity-20">
-                <FaArrowTrendUp size={48} color="#fff" />
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            hoverable
-            className="shadow-lg border-0 overflow-hidden"
-            bodyStyle={{ padding: 0 }}
-            style={{ borderRadius: 20 }}
-          >
-            <div className="p-6 bg-linear-to-br from-rose-500 to-orange-600 h-full">
-              <Space direction="vertical" size={0}>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {t("total_cost")}
-                </Text>
-                <Title
-                  level={2}
-                  style={{ color: "#fff", margin: 0, marginTop: 4 }}
-                >
-                  {Number(data?.totalCost || 0).toLocaleString()}{" "}
-                  <span className="text-sm font-normal">TMT</span>
-                </Title>
-              </Space>
-              <div className="absolute right-6 bottom-6 opacity-20">
-                <FaArrowTrendDown size={48} color="#fff" />
-              </div>
-            </div>
-          </Card>
-
-          <Card
-            hoverable
-            className="shadow-lg border-0 overflow-hidden"
-            bodyStyle={{ padding: 0 }}
-            style={{ borderRadius: 20 }}
-          >
-            <div
-              className={`p-6 bg-linear-to-br ${(data?.totalProfit || 0) >= 0 ? "from-emerald-500 to-teal-600" : "from-red-600 to-red-800"} h-full`}
-            >
-              <Space direction="vertical" size={0}>
-                <Text
-                  style={{
-                    color: "rgba(255,255,255,0.7)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {t("total_profit")}
-                </Text>
-                <Title
-                  level={2}
-                  style={{ color: "#fff", margin: 0, marginTop: 4 }}
-                >
-                  {Number(data?.totalProfit || 0).toLocaleString()}{" "}
-                  <span className="text-sm font-normal">TMT</span>
-                </Title>
-              </Space>
-              <div className="absolute right-6 bottom-6 opacity-20">
-                <FaChartLine size={48} color="#fff" />
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Detailed Tabs */}
-        <Box>
-          <div className="p-6">
-            <Tabs defaultActiveKey="1" items={items} size="large" />
+    <>
+      <section>
+        <Header title={t("income")} />
+        <Section>
+          {/* ── 3 Stat cards ── */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <StatCard
+              icon={<FaArrowTrendUp />}
+              label={t("total_revenue")}
+              value={
+                isLoading
+                  ? "..."
+                  : `${Number(data?.totalRevenue ?? 0).toFixed(2)} TMT`
+              }
+              sub={`${t("total_sales")}: ${data?.sales?.length ?? 0}`}
+              color="text-green-600"
+              bg="bg-green-50"
+            />
+            <StatCard
+              icon={<FaArrowTrendDown />}
+              label={t("total_cost")}
+              value={
+                isLoading
+                  ? "..."
+                  : `${Number(data?.totalCost ?? 0).toFixed(2)} TMT`
+              }
+              sub={`${t("total_purchases")}: ${data?.purchases?.length ?? 0}`}
+              color="text-red-500"
+              bg="bg-red-50"
+            />
+            <StatCard
+              icon={<FaChartLine />}
+              label={t("total_profit")}
+              value={
+                isLoading
+                  ? "..."
+                  : `${profit >= 0 ? "+" : ""}${Number(profit).toFixed(2)} TMT`
+              }
+              color={profit >= 0 ? "text-blue-600" : "text-red-500"}
+              bg={profit >= 0 ? "bg-blue-50" : "bg-red-50"}
+            />
           </div>
-        </Box>
-      </Section>
-    </section>
+
+          {/* ── Tables ── */}
+          <Box>
+            <Tabs
+              defaultActiveKey="products"
+              items={tabs}
+              size="large"
+            />
+          </Box>
+        </Section>
+      </section>
+    </>
   );
 };
 

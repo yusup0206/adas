@@ -1,11 +1,11 @@
-import type { Client, ClientValues } from "@/interfaces/clients.interface";
-import { useUpdateClientMutation } from "@/services/clientsApi";
+import type { Supplier } from "@/interfaces/suppliers.interface";
+import { useUpdateSupplierMutation } from "@/services/suppliersApi";
 import { App, Button, Form, Input, Modal } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiPencilFill } from "react-icons/ri";
 
-const UpdateModal = ({ record }: { record: Client }) => {
+const UpdateModal = ({ record }: { record: Supplier }) => {
   const { t } = useTranslation();
   const { message } = App.useApp();
 
@@ -15,10 +15,10 @@ const UpdateModal = ({ record }: { record: Client }) => {
   const [openModal, setOpenModal] = useState(false);
 
   // queries
-  const [update] = useUpdateClientMutation();
+  const [update] = useUpdateSupplierMutation();
 
   // handlers
-  const handleUpdate = async (values: ClientValues) => {
+  const handleUpdate = async (values: { name_tm: string; name_ru: string }) => {
     try {
       await update({ id: record.id, body: values }).unwrap();
       setOpenModal(false);
@@ -32,8 +32,6 @@ const UpdateModal = ({ record }: { record: Client }) => {
     form.setFieldsValue({
       name_tm: record.name_tm,
       name_ru: record.name_ru,
-      address_tm: record.address_tm,
-      address_ru: record.address_ru,
     });
     setOpenModal(true);
   };
@@ -61,7 +59,7 @@ const UpdateModal = ({ record }: { record: Client }) => {
         width={800}
       >
         <Form
-          id={`client-update-form-${record.id}`}
+          id={`supplier-update-form-${record.id}`}
           form={form}
           layout="vertical"
           onFinish={handleUpdate}
@@ -69,7 +67,7 @@ const UpdateModal = ({ record }: { record: Client }) => {
         >
           <Form.Item
             name="name_tm"
-            className="col-span-6 m-0"
+            className="col-span-12 m-0"
             label={`${t("name")} (TM)`}
             rules={[{ required: true, message: t("required_field") }]}
           >
@@ -78,25 +76,9 @@ const UpdateModal = ({ record }: { record: Client }) => {
 
           <Form.Item
             name="name_ru"
-            className="col-span-6 m-0"
+            className="col-span-12 m-0"
             label={`${t("name")} (RU)`}
             rules={[{ required: true, message: t("required_field") }]}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="address_tm"
-            className="col-span-6 m-0"
-            label={`${t("address")} (TM)`}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="address_ru"
-            className="col-span-6 m-0"
-            label={`${t("address")} (RU)`}
           >
             <Input className="w-full" allowClear />
           </Form.Item>
@@ -115,7 +97,7 @@ const UpdateModal = ({ record }: { record: Client }) => {
             <Button
               type="primary"
               htmlType="submit"
-              form={`client-update-form-${record.id}`}
+              form={`supplier-update-form-${record.id}`}
               size="large"
             >
               {t("save")}

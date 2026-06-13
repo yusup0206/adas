@@ -2,7 +2,17 @@ import type { OrderValues } from "@/interfaces/orders.interface";
 import { useGetSuppliersQuery } from "@/services/suppliersApi";
 import { useCreateOrderMutation } from "@/services/ordersApi";
 import { useGetProductsQuery } from "@/services/productsApi";
-import { App, Button, Form, InputNumber, Modal, Select, Space, Divider } from "antd";
+import {
+  App,
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Select,
+  Space,
+  Divider,
+} from "antd";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { FaPlus, FaTrash } from "react-icons/fa6";
@@ -34,9 +44,11 @@ const CreateModal = () => {
   // Calculate total price dynamically
   const items = Form.useWatch("items", form);
   const totalPrice = useMemo(() => {
-    return items?.reduce((sum: number, item: any) => {
-      return sum + (item?.quantity || 0) * (item?.unitPrice || 0);
-    }, 0) || 0;
+    return (
+      items?.reduce((sum: number, item: any) => {
+        return sum + (item?.quantity || 0) * (item?.unitPrice || 0);
+      }, 0) || 0
+    );
   }, [items]);
 
   const handleCreate = async (values: any) => {
@@ -84,7 +96,14 @@ const CreateModal = () => {
           onFinish={handleCreate}
           initialValues={{ items: [{}] }}
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Form.Item
+              name="orderName"
+              label={t("order_name") || "Order Name"}
+              rules={[{ required: true, message: t("required_field") }]}
+            >
+              <Input placeholder={t("order_name")} allowClear />
+            </Form.Item>
             <Form.Item
               name="supplierId"
               label={t("supplier")}
@@ -100,21 +119,23 @@ const CreateModal = () => {
                 optionFilterProp="label"
               />
             </Form.Item>
-
-
           </div>
 
-          <Divider orientation="left">{t("products")}</Divider>
+          <Divider orientation="center">{t("products")}</Divider>
 
           <Form.List name="items">
             {(fields, { add, remove }) => (
-              <>
+              <div className="w-full flex flex-col gap-8">
                 {fields.map(({ key, name, ...restField }) => (
-                  <Space key={key} style={{ display: "flex", marginBottom: 8 }} align="baseline">
+                  <div
+                    key={key}
+                    className="w-full flex flex-col md:flex-row items-start gap-4"
+                  >
                     <Form.Item
                       {...restField}
                       name={[name, "productId"]}
                       rules={[{ required: true, message: t("required_field") }]}
+                      className="w-full"
                     >
                       <Select
                         placeholder={t("select_product")}
@@ -124,38 +145,68 @@ const CreateModal = () => {
                           label: i18n.language === "ru" ? p.name_ru : p.name_tm,
                         }))}
                         showSearch
+                        allowClear
                         optionFilterProp="label"
-                        onSelect={(val: number) => handleProductSelect(val, name)}
+                        onSelect={(val: number) =>
+                          handleProductSelect(val, name)
+                        }
+                        className="w-full"
                       />
                     </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "quantity"]}
-                      rules={[{ required: true, message: t("required_field") }]}
-                    >
-                      <InputNumber min={1} placeholder={t("quantity")} />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "unitPrice"]}
-                      rules={[{ required: true, message: t("required_field") }]}
-                    >
-                      <InputNumber min={0} placeholder={t("unit_price")} step={0.01} />
-                    </Form.Item>
-                    {fields.length > 1 && (
-                      <FaTrash
-                        className="text-red-500 cursor-pointer mb-2"
-                        onClick={() => remove(name)}
-                      />
-                    )}
-                  </Space>
+                    <div className="w-full flex items-start gap-4">
+                      <Form.Item
+                        {...restField}
+                        name={[name, "quantity"]}
+                        rules={[
+                          { required: true, message: t("required_field") },
+                        ]}
+                        className="w-full"
+                      >
+                        <InputNumber
+                          min={1}
+                          placeholder={t("quantity")}
+                          className="w-full"
+                        />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "unitPrice"]}
+                        rules={[
+                          { required: true, message: t("required_field") },
+                        ]}
+                        className="w-full"
+                      >
+                        <InputNumber
+                          min={0}
+                          placeholder={t("unit_price")}
+                          step={0.01}
+                          className="w-full"
+                        />
+                      </Form.Item>
+                      {fields.length > 1 && (
+                        <div className="w-fit">
+                          <Button
+                            type="text"
+                            icon={<FaTrash />}
+                            onClick={() => remove(name)}
+                            danger
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ))}
                 <Form.Item>
-                  <Button type="dashed" onClick={() => add()} block icon={<FaPlus />}>
+                  <Button
+                    type="dashed"
+                    onClick={() => add()}
+                    block
+                    icon={<FaPlus />}
+                  >
                     {t("add_item")}
                   </Button>
                 </Form.Item>
-              </>
+              </div>
             )}
           </Form.List>
 

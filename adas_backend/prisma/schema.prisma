@@ -8,15 +8,16 @@ datasource db {
 }
 
 model Supplier {
-  id             Int             @id @default(autoincrement())
-  name_tm        String
-  name_ru        String
-  totalAmount    Decimal         @default(0) @db.Decimal(15, 2)
-  paidAmount     Decimal         @default(0) @db.Decimal(15, 2)
-  remainingDebt  Decimal         @default(0) @db.Decimal(15, 2)
-  purchaseOrders PurchaseOrder[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id                Int                @id @default(autoincrement())
+  name_tm           String
+  name_ru           String
+  totalAmount       Decimal            @default(0) @db.Decimal(15, 2)
+  paidAmount        Decimal            @default(0) @db.Decimal(15, 2)
+  remainingDebt     Decimal            @default(0) @db.Decimal(15, 2)
+  purchaseOrders    PurchaseOrder[]
+  warehouseArrivals WarehouseArrival[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 }
 
 model Product {
@@ -28,6 +29,8 @@ model Product {
   productionCountry_tm String              @default("")
   productionCountry_ru String              @default("")
   items                PurchaseOrderItem[]
+  warehouseArrivals    WarehouseArrival[]
+  warehouseDispatches  WarehouseDispatch[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
 }
@@ -38,18 +41,18 @@ enum OrderStatus {
 }
 
 model PurchaseOrder {
-  id          Int                 @id @default(autoincrement())
-  supplier    Supplier            @relation(fields: [supplierId], references: [id])
-  supplierId  Int
-  totalPrice  Decimal             @db.Decimal(15, 2)
-  paidAmount  Decimal             @default(0) @db.Decimal(15, 2)
-  status      OrderStatus         @default(PENDING)
-  items       PurchaseOrderItem[]
-  agreement   Agreement?          @relation(fields: [agreementId], references: [id])
-  agreementId Int?
-  orderDate   DateTime            @default(now())
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id                Int                 @id @default(autoincrement())
+  orderName         String              @default("")
+  supplier          Supplier            @relation(fields: [supplierId], references: [id])
+  supplierId        Int
+  totalPrice        Decimal             @db.Decimal(15, 2)
+  paidAmount        Decimal             @default(0) @db.Decimal(15, 2)
+  status            OrderStatus         @default(PENDING)
+  items             PurchaseOrderItem[]
+  warehouseArrivals WarehouseArrival[]
+  orderDate         DateTime            @default(now())
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
 model PurchaseOrderItem {
@@ -63,28 +66,16 @@ model PurchaseOrderItem {
   totalPrice      Decimal       @db.Decimal(15, 2)
 }
 
-
-
 model Client {
-  id                   Int         @id @default(autoincrement())
+  id                   Int                 @id @default(autoincrement())
   name_tm              String
   name_ru              String
-  directorName_tm      String      @default("")
-  directorName_ru      String      @default("")
-  address_tm           String      @default("")
-  address_ru           String      @default("")
-  bankName_tm          String      @default("")
-  bankName_ru          String      @default("")
-  swift                String      @default("")
-  accountNo            String      @default("")
-  currentAccount       String      @default("")
-  correspondentAccount String      @default("")
-  bankIdCode           String      @default("")
-  individualIdNumber   String      @default("")
-  buyerAgreements      Agreement[] @relation("BuyerClient")
-  sellerAgreements     Agreement[] @relation("SellerClient")
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  address_tm           String              @default("")
+  address_ru           String              @default("")
+  warehouseArrivals    WarehouseArrival[]
+  warehouseDispatches  WarehouseDispatch[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
 model Measurement {
@@ -96,17 +87,43 @@ model Measurement {
   updatedAt DateTime  @updatedAt
 }
 
-model Agreement {
-  id              Int             @id @default(autoincrement())
-  agreementNumber String          @default("")
-  registeredDate  DateTime        @default(now())
-  validDate       DateTime        @default(now())
-  status          String          @default("active")
-  buyerClient     Client?         @relation("BuyerClient", fields: [buyerClientId], references: [id])
-  buyerClientId   Int?
-  sellerClient    Client?         @relation("SellerClient", fields: [sellerClientId], references: [id])
-  sellerClientId  Int?
-  purchaseOrders  PurchaseOrder[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+enum WarehouseType {
+  IMPORT
+  EXPORT
+}
+
+model WarehouseArrival {
+  id              Int            @id @default(autoincrement())
+  warehouseType   WarehouseType
+  product         Product        @relation(fields: [productId], references: [id])
+  productId       Int
+  quantity        Int
+  unitPrice       Decimal        @db.Decimal(15, 2)
+  totalPrice      Decimal        @db.Decimal(15, 2)
+  supplier        Supplier?      @relation(fields: [supplierId], references: [id])
+  supplierId      Int?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId Int?
+  client          Client?        @relation(fields: [clientId], references: [id])
+  clientId        Int?
+  note            String         @default("")
+  arrivalDate     DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model WarehouseDispatch {
+  id             Int           @id @default(autoincrement())
+  warehouseType  WarehouseType
+  product        Product       @relation(fields: [productId], references: [id])
+  productId      Int
+  quantity       Int
+  sellPrice      Decimal       @default(0) @db.Decimal(15, 2)
+  totalSellPrice Decimal       @default(0) @db.Decimal(15, 2)
+  client         Client?       @relation(fields: [clientId], references: [id])
+  clientId       Int?
+  note           String        @default("")
+  dispatchDate   DateTime      @default(now())
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 }

@@ -1,4 +1,4 @@
-import { App, Button, Form, InputNumber, Modal, Select } from "antd";
+import { App, Button, Form, Input, InputNumber, Modal, Select } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUpdateOrderMutation } from "@/services/ordersApi";
@@ -15,6 +15,7 @@ const EditModal = ({ record }: { record: any }) => {
 
   const handleOpen = () => {
     form.setFieldsValue({
+      orderName: record.orderName,
       supplierId: record.supplierId,
       totalPrice: record.totalPrice,
     });
@@ -45,11 +46,14 @@ const EditModal = ({ record }: { record: any }) => {
         footer={null}
         centered
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdate}
-        >
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
+          <Form.Item
+            name="orderName"
+            label={t("order_name") || "Order Name"}
+            rules={[{ required: true }]}
+          >
+            <Input allowClear />
+          </Form.Item>
           <Form.Item
             name="supplierId"
             label={t("supplier")}

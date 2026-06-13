@@ -45,7 +45,7 @@ const Clients = () => {
   }, [filters, setSearchParams]);
 
   // queries
-  const { data: clients, isLoading: clientsLoading } = useGetClientsQuery();
+  const { data: clients, isLoading: clientsLoading } = useGetClientsQuery(filters);
   const [deleteClient] = useDeleteClientMutation();
 
   // table data
@@ -90,6 +90,9 @@ const Clients = () => {
                   prefix={<IoSearch />}
                   size="large"
                   placeholder={t("search")}
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: "1" }))}
+                  allowClear
                 />
               </div>
               <CreateModal />

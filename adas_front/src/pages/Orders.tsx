@@ -2,14 +2,16 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import { Table, type TableProps } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import CreateModal from "@/components/orders/CreateModal";
 import UpdateModal from "@/components/orders/UpdateModal";
 import DeleteModal from "@/components/shared/DeleteModal";
 import UpdateStatusModal from "@/components/orders/UpdateStatusModal";
 import EditModal from "@/components/orders/EditModal";
-import { Select } from "antd";
+import { useSearchParams } from "react-router-dom";
+import { IoSearch } from "react-icons/io5";
+import { Select, Tag, Input } from "antd";
 import {
   useGetOrdersQuery,
   useDeleteOrderMutation,
@@ -19,38 +21,65 @@ import type { Order } from "@/interfaces/orders.interface";
 const Orders = () => {
   const { t, i18n } = useTranslation();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   // states
   const [filters, setFilters] = useState({
-    page: "1",
-    pageSize: "10",
-    status: "ALL",
+    page: searchParams.get("page") || "1",
+    pageSize: searchParams.get("pageSize") || "10",
+    search: searchParams.get("search") || "",
+    status: searchParams.get("status") || "ALL",
   });
 
-  const { data: ordersData, isLoading: ordersLoading } = useGetOrdersQuery(filters);
+  useEffect(() => {
+    const params: Record<string, string> = {};
+
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value === "" || value === undefined || value === null) return;
+      if (typeof value === "boolean") {
+        params[key] = value ? "true" : "false";
+      } else {
+        params[key] = value.toString();
+      }
+    });
+
+    setSearchParams(params);
+  }, [filters, setSearchParams]);
+
+  const { data: ordersData, isLoading: ordersLoading } =
+    useGetOrdersQuery(filters);
   const [deleteOrder] = useDeleteOrderMutation();
 
   // table data
   const columns: TableProps<Order>["columns"] = [
     {
-      title: "№",
-      dataIndex: "index",
-      key: "index",
-      render: (_: unknown, __: unknown, index: number) =>
-        (Number(filters.page) - 1) * Number(filters.pageSize) + index + 1,
+      title: t("order_name") || "Order Name",
+      dataIndex: "orderName",
+      key: "orderName",
+      render: (orderName: string) => (
+        <span className="font-semibold">{orderName}</span>
+      ),
     },
 
     {
       title: t("supplier"),
       dataIndex: "supplier",
       key: "supplier",
-      render: (_, record) => (i18n.language === "ru" ? record.supplier?.name_ru : record.supplier?.name_tm) || "-",
+      render: (_, record) =>
+        (i18n.language === "ru"
+          ? record.supplier?.name_ru
+          : record.supplier?.name_tm) || "-",
     },
 
     {
       title: t("status"),
       dataIndex: "status",
       key: "status",
-      render: (status: string) => t(status.toLowerCase()) || status,
+      render: (status) => (
+        <Tag color={status === "RECEIVED" ? "green" : "orange"}>
+          {t(`${status}`)}
+        </Tag>
+      ),
     },
 
     {
@@ -65,9 +94,9 @@ const Orders = () => {
       dataIndex: "isPaid",
       key: "isPaid",
       render: (isPaid: boolean) => (
-        <span className={isPaid ? "text-green-500" : "text-red-500 font-bold"}>
+        <Tag color={isPaid ? "green" : "red"}>
           {isPaid ? t("paid") : t("unpaid")}
-        </span>
+        </Tag>
       ),
     },
 
@@ -76,10 +105,18 @@ const Orders = () => {
       key: "action",
       render: (_, record) => (
         <div className="flex gap-2 items-center justify-start text-textColor">
-          <UpdateStatusModal orderId={record.id} currentStatus={record.status} />
           <EditModal record={record} />
           <UpdateModal record={record} />
-          <DeleteModal id={record.id} onDelete={deleteOrder} />
+          <DeleteModal
+            id={record.id}
+            onDelete={async (id) => await deleteOrder(Number(id)).unwrap()}
+          />
+          {record.status !== "RECEIVED" && (
+            <UpdateStatusModal
+              orderId={record.id}
+              currentStatus={record.status}
+            />
+          )}
         </div>
       ),
     },
@@ -91,17 +128,37 @@ const Orders = () => {
         <Header title={t("orders")} />
         <Section>
           <Box>
-            <div className="w-full flex flex-col md:flex-row items-center justify-end gap-4">
-              <Select
-                value={filters.status}
-                onChange={(val) => setFilters(prev => ({ ...prev, status: val, page: "1" }))}
-                style={{ width: 200 }}
-                options={[
-                  { value: "ALL", label: t("all_orders") || "All Orders" },
-                  { value: "PENDING", label: t("pending") || "Pending" },
-                  { value: "RECEIVED", label: t("received") || "Received" },
-                ]}
-              />
+            <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-fit max-w-full md:max-w-[566px]">
+                <Input
+                  prefix={<IoSearch />}
+                  size="large"
+                  placeholder={t("search_by_order_name")}
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      search: e.target.value,
+                      page: "1",
+                    }))
+                  }
+                  allowClear
+                  className="w-full md:w-[350px]"
+                />
+                <Select
+                  value={filters.status}
+                  onChange={(val) =>
+                    setFilters((prev) => ({ ...prev, status: val, page: "1" }))
+                  }
+                  size="large"
+                  className="w-full md:w-[200px]"
+                  options={[
+                    { value: "ALL", label: t("all_orders") || "All Orders" },
+                    { value: "PENDING", label: t("pending") || "Pending" },
+                    { value: "RECEIVED", label: t("received") || "Received" },
+                  ]}
+                />
+              </div>
               <CreateModal />
             </div>
             <Table

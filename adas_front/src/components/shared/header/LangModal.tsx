@@ -10,7 +10,6 @@ const LangModal = () => {
   const languageOptions = [
     { value: "tk", label: "Türkmen" },
     { value: "ru", label: "Русский" },
-    { value: "en", label: "English" },
   ];
 
   //   states

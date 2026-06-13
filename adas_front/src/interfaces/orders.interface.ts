@@ -10,10 +10,12 @@ export interface OrderFilters {
   page?: string;
   pageSize?: string;
   status?: string;
+  isPaid?: boolean;
 }
 
 export interface Order {
   id: number;
+  orderName: string;
   supplierId: number;
   supplier?: Supplier;
   totalPrice: number;
@@ -40,6 +42,7 @@ export interface OrderItem {
 }
 
 export interface OrderValues {
+  orderName: string;
   supplierId: number;
   totalPrice: number;
   items: {

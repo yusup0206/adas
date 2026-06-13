@@ -25,7 +25,10 @@ export const suppliersApi = createApi({
         }
         return queryString;
       },
-      providesTags: ["Supplier"],
+      providesTags: (result) =>
+        result && result.list
+          ? [...result.list.map((supplier) => ({ type: "Supplier" as const, id: supplier.id })), { type: "Supplier", id: "LIST" }]
+          : [{ type: "Supplier", id: "LIST" }],
     }),
     createSupplier: builder.mutation({
       query: (body) => ({

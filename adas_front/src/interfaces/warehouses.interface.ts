@@ -1,29 +1,77 @@
-export interface WarehouseResponse {
-  list: Warehouse[];
+export type WarehouseType = 'IMPORT' | 'EXPORT';
+
+export interface WarehouseArrival {
+  id: number;
+  warehouseType: WarehouseType;
+  productId: number;
+  product?: { id: number; name_tm: string; name_ru: string };
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  supplierId?: number | null;
+  supplier?: { id: number; name_tm: string; name_ru: string } | null;
+  purchaseOrderId?: number | null;
+  purchaseOrder?: { id: number } | null;
+  clientId?: number | null;
+  client?: { id: number; name_tm: string; name_ru: string } | null;
+  note: string;
+  arrivalDate: string;
+  createdAt: string;
+}
+
+export interface WarehouseDispatch {
+  id: number;
+  warehouseType: WarehouseType;
+  productId: number;
+  product?: { id: number; name_tm: string; name_ru: string };
+  quantity: number;
+  sellPrice: number;
+  totalSellPrice: number;
+  clientId?: number | null;
+  client?: { id: number; name_tm: string; name_ru: string } | null;
+  note: string;
+  dispatchDate: string;
+  createdAt: string;
+}
+
+export interface WarehouseStockItem {
+  productId: number;
+  product?: { id: number; name_tm: string; name_ru: string; unit?: { name_tm: string; name_ru: string } | null };
+  totalArrived: number;
+  totalDispatched: number;
+  currentStock: number;
+}
+
+export interface ArrivalResponse {
+  list: WarehouseArrival[];
   total: number;
 }
 
-export interface Warehouse {
-  id: number;
-  name_tm: string;
-  name_ru: string;
-  address_tm: string;
-  address_ru: string;
-  location?: string;
-  createdAt?: string;
-  updatedAt?: string;
+export interface DispatchResponse {
+  list: WarehouseDispatch[];
+  total: number;
 }
 
-export interface WarehouseFilters {
-  search?: string;
-  page?: string;
-  pageSize?: string;
+export interface CreateArrivalValues {
+  warehouseType: WarehouseType;
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  supplierId?: number | null;
+  purchaseOrderId?: number | null;
+  clientId?: number | null;
+  note?: string;
+  arrivalDate?: string;
 }
 
-export interface WarehouseValues {
-  name_tm: string;
-  name_ru: string;
-  address_tm?: string;
-  address_ru?: string;
-  location?: string;
+export interface CreateDispatchValues {
+  warehouseType: WarehouseType;
+  clientId?: number | null;
+  note?: string;
+  dispatchDate?: string;
+  items: {
+    productId: number;
+    quantity: number;
+    sellPrice: number;
+  }[];
 }

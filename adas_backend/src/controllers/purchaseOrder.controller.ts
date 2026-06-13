@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { purchaseOrderService } from '../services/purchaseOrder.service';
 const CreateOrderSchema = z.object({
+  orderName: z.string().min(1),
   supplierId: z.coerce.number(),
   totalPrice: z.coerce.number().positive(),
   items: z.array(z.object({
@@ -84,14 +85,26 @@ export class PurchaseOrderController {
   }
   async getAllOrders(req: Request, res: Response) {
     try {
-      const { page, pageSize, status } = req.query;
+      const { search, page, pageSize, status, isPaid } = req.query;
       const filters = {
+        search: search as string,
         page: page ? Number(page) : undefined,
         pageSize: pageSize ? Number(pageSize) : undefined,
         status: status as string,
+        isPaid: isPaid === 'true' ? true : isPaid === 'false' ? false : undefined,
       };
       const result = await purchaseOrderService.getAllPurchaseOrders(filters);
       res.status(200).json(result);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getDebtSummary(req: Request, res: Response) {
+    try {
+      const summary = await purchaseOrderService.getDebtSummary();
+      res.status(200).json(summary);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Internal server error' });

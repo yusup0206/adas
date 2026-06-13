@@ -74,22 +74,6 @@ const CreateModal = () => {
           </Form.Item>
 
           <Form.Item
-            name="directorName_tm"
-            className="col-span-6 m-0"
-            label={`${t("director_name")} (TM)`}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="directorName_ru"
-            className="col-span-6 m-0"
-            label={`${t("director_name")} (RU)`}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
             name="address_tm"
             className="col-span-6 m-0"
             label={`${t("address")} (TM)`}
@@ -101,70 +85,6 @@ const CreateModal = () => {
             name="address_ru"
             className="col-span-6 m-0"
             label={`${t("address")} (RU)`}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="bankName_tm"
-            className="col-span-6 m-0"
-            label={`${t("bank_name")} (TM)`}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="bankName_ru"
-            className="col-span-6 m-0"
-            label={`${t("bank_name")} (RU)`}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="swift"
-            className="col-span-6 m-0"
-            label={t("swift")}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="accountNo"
-            className="col-span-6 m-0"
-            label={t("account_no")}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="currentAccount"
-            className="col-span-6 m-0"
-            label={t("current_account")}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="correspondentAccount"
-            className="col-span-6 m-0"
-            label={t("correspondent_account")}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="bankIdCode"
-            className="col-span-6 m-0"
-            label={t("bank_id_code")}
-          >
-            <Input className="w-full" allowClear />
-          </Form.Item>
-
-          <Form.Item
-            name="individualIdNumber"
-            className="col-span-6 m-0"
-            label={t("individual_id_number")}
           >
             <Input className="w-full" allowClear />
           </Form.Item>
