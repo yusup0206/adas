@@ -1,8 +1,13 @@
-import { IoMenu } from "react-icons/io5";
+import { IoMenu, IoLogOut } from "react-icons/io5";
 import LangModal from "./LangModal";
 import { useState } from "react";
 import Sidebar from "../Sidebar";
 import { Button } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "@/store/slices/authSlice";
+import { useLogoutMutation } from "@/services/authApi";
+import type { RootState } from "@/store";
 
 interface MainHeaderProps {
   title: string;
@@ -10,11 +15,21 @@ interface MainHeaderProps {
 
 const Header = ({ title }: MainHeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [logoutApi] = useLogoutMutation();
 
-  // const handleLogout = () => {
-  //   navigate("/admin/sign-in");
-  // };
+  const handleLogout = async () => {
+    try {
+      await logoutApi({}).unwrap();
+    } catch (error) {
+      console.error("Logout error", error);
+    }
+    dispatch(logout());
+    localStorage.removeItem("refreshToken");
+    navigate("/login");
+  };
 
   return (
     <div className="sticky top-0 z-40 bg-bgColor w-full flex items-center justify-between gap-4 p-6 border-b border-borderColor">
@@ -32,17 +47,23 @@ const Header = ({ title }: MainHeaderProps) => {
         </h1>
       </div>
       <div className="flex items-center gap-4">
+        <button
+          onClick={handleLogout}
+          className="text-textColor hover:text-red-500 active:text-red-500 transition-all cursor-pointer ml-2"
+          title="Logout"
+        >
+          <IoLogOut className="size-6" />
+        </button>
         <LangModal />
-        {/* <div className="flex items-center gap-2">
-          <button
-            onClick={handleLogout}
-            className="text-textColor hover:text-red-500 active:text-red-500 transition-all cursor-pointer"
-          >
-            <IoLogOut className="size-6" />
-          </button>
-        </div> */}
-        <div className="size-10 overflow-hidden rounded-full bg-gray-400">
-          {/* <img src="" alt="" className="size-full object-cover" /> */}
+        <div className="flex items-center gap-4">
+          {user && (
+            <span className="text-textColor font-medium hidden sm:block">
+              {user.username}
+            </span>
+          )}
+          <div className="size-10 overflow-hidden rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
+            {user?.username?.[0]?.toUpperCase() || "U"}
+          </div>
         </div>
       </div>
 

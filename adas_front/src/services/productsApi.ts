@@ -1,11 +1,10 @@
 import type { ProductResponse, ProductFilters } from "@/interfaces/products.interface";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const productsApi = createApi({
   reducerPath: "productsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Product"],
   endpoints: (builder) => ({
     getProducts: builder.query<ProductResponse, ProductFilters | void>({

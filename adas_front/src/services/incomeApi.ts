@@ -1,11 +1,10 @@
 import type { IncomeSummary } from "@/interfaces/income.interface";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const incomeApi = createApi({
   reducerPath: "incomeApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Income"],
   endpoints: (builder) => ({
     getIncomeSummary: builder.query<IncomeSummary, void>({

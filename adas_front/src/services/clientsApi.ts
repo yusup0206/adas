@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 import type {
   ClientFilters,
   ClientResponse,
@@ -6,9 +7,7 @@ import type {
 
 export const clientsApi = createApi({
   reducerPath: "clientsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Client"],
   endpoints: (builder) => ({
     getClients: builder.query<ClientResponse, ClientFilters | void>({

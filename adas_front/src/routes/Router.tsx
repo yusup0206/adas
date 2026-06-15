@@ -14,8 +14,8 @@ const Suppliers = lazy(() => import("@/pages/Suppliers"));
 const Income = lazy(() => import("@/pages/Income"));
 const Warehouses = lazy(() => import("@/pages/Warehouses"));
 const Debt = lazy(() => import("@/pages/Debt"));
-
-const Home = lazy(() => import("@/pages/Home"));
+const Users = lazy(() => import("@/pages/Users"));
+const Roles = lazy(() => import("@/pages/Roles"));
 
 function Router() {
   const routes = useRoutes([
@@ -41,8 +41,8 @@ function Router() {
         { path: "income", element: <Income /> },
         { path: "warehouses", element: <Warehouses /> },
         { path: "debt", element: <Debt /> },
-
-        { path: "home", element: <Home /> },
+        { path: "users", element: <Users /> },
+        { path: "roles", element: <Roles /> },
       ],
     },
 

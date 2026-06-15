@@ -2,13 +2,12 @@ import type {
   SupplierResponse,
   SupplierFilters,
 } from "@/interfaces/suppliers.interface";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const suppliersApi = createApi({
   reducerPath: "suppliersApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Supplier"],
   endpoints: (builder) => ({
     getSuppliers: builder.query<SupplierResponse, SupplierFilters | void>({

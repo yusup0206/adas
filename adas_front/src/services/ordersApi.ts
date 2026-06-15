@@ -4,13 +4,12 @@ import type {
   OrderResponse,
   OrderFilters,
 } from "@/interfaces/orders.interface";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 
 export const ordersApi = createApi({
   reducerPath: "ordersApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Order", "Supplier"],
   endpoints: (builder) => ({
     getOrders: builder.query<OrderResponse, OrderFilters | void>({

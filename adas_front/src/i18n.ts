@@ -4,6 +4,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 
 import ru from "./lang/ru.json";
 import tk from "./lang/tk.json";
+import en from "./lang/en.json";
 
 i18n
   .use(LanguageDetector)
@@ -12,6 +13,7 @@ i18n
     resources: {
       ru: { translation: ru },
       tk: { translation: tk },
+      en: { translation: en },
     },
     fallbackLng: "tk",
     interpolation: {

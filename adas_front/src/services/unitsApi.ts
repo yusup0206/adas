@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQueryWithReauth } from "./baseQueryWithReauth";
 import type {
   UnitFilters,
   UnitResponse,
@@ -6,9 +7,7 @@ import type {
 
 export const unitsApi = createApi({
   reducerPath: "unitsApi",
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ["Unit"],
   endpoints: (builder) => ({
     getUnits: builder.query<UnitResponse, UnitFilters | void>({

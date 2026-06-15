@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauth } from './baseQueryWithReauth';
 import type {
   WarehouseStockItem,
   ArrivalResponse,
@@ -10,9 +11,7 @@ import type {
 
 export const warehouseApi = createApi({
   reducerPath: 'warehouseApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: import.meta.env.VITE_APP_BASE_URL,
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['WStock', 'WArrival', 'WDispatch'],
   endpoints: (builder) => ({
     getStock: builder.query<WarehouseStockItem[], { type: WarehouseType }>({

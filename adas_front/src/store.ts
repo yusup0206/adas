@@ -7,6 +7,11 @@ import { ordersApi } from "./services/ordersApi";
 import { suppliersApi } from "./services/suppliersApi";
 import { incomeApi } from "./services/incomeApi";
 import { warehouseApi } from "./services/warehouseApi";
+import { authApi } from "./services/authApi";
+import { usersApi } from "./services/usersApi";
+import { rolesApi } from "./services/rolesApi";
+import { permissionsApi } from "./services/permissionsApi";
+import authReducer from "./store/slices/authSlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +22,11 @@ export const store = configureStore({
     [suppliersApi.reducerPath]: suppliersApi.reducer,
     [incomeApi.reducerPath]: incomeApi.reducer,
     [warehouseApi.reducerPath]: warehouseApi.reducer,
+    [authApi.reducerPath]: authApi.reducer,
+    [usersApi.reducerPath]: usersApi.reducer,
+    [rolesApi.reducerPath]: rolesApi.reducer,
+    [permissionsApi.reducerPath]: permissionsApi.reducer,
+    auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -27,10 +37,13 @@ export const store = configureStore({
       suppliersApi.middleware,
       incomeApi.middleware,
       warehouseApi.middleware,
+      authApi.middleware,
+      usersApi.middleware,
+      rolesApi.middleware,
+      permissionsApi.middleware,
     ),
 });
 
 // Types
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-

@@ -3,6 +3,8 @@ import { sidebarData } from "@/pageData/sidebarData";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -13,9 +15,15 @@ const Sidebar = ({ onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const toggleDropdown = (key: string) => {
     setOpenDropdowns((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const hasPermission = (permission?: string) => {
+    if (!permission) return true;
+    return user?.permissions?.includes(permission);
   };
 
   return (
@@ -32,6 +40,9 @@ const Sidebar = ({ onClose }: SidebarProps) => {
         <div className="w-full h-full flex flex-col gap-2">
           {sidebarData.sidebarElements.map((item, index) => {
             if (item.children) {
+              const visibleChildren = item.children.filter((child: any) => hasPermission(child.permission));
+              if (visibleChildren.length === 0) return null;
+
               const isOpen = openDropdowns[item.labelKey];
               return (
                 <div key={index} className="w-full flex flex-col gap-1">
@@ -47,7 +58,7 @@ const Sidebar = ({ onClose }: SidebarProps) => {
                   </button>
                   {isOpen && (
                     <div className="flex flex-col gap-1 pl-4">
-                      {item.children.map((child, childIndex) => (
+                      {visibleChildren.map((child: any, childIndex: number) => (
                         <button
                           key={childIndex}
                           onClick={() => {
@@ -69,6 +80,8 @@ const Sidebar = ({ onClose }: SidebarProps) => {
                 </div>
               );
             }
+
+            if (!hasPermission((item as any).permission)) return null;
 
             return (
               <button

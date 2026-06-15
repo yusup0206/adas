@@ -1,6 +1,9 @@
 import { App, Button, Form, Input } from "antd";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useLoginMutation } from "@/services/authApi";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/store/slices/authSlice";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -8,17 +11,29 @@ const Login = () => {
   const { message } = App.useApp();
   const [signInForm] = Form.useForm();
 
-  //   queries
+  const [login, { isLoading }] = useLoginMutation();
+  const dispatch = useDispatch();
 
   //   functions
-  const handleSignIn = async (values:any) => {
-    console.log(values);
+  const handleSignIn = async (values: any) => {
     try {
+      const response = await login({
+        username: values.login,
+        password: values.password,
+      }).unwrap();
+      dispatch(
+        setCredentials({
+          user: response.user,
+          accessToken: response.accessToken,
+        }),
+      );
+      localStorage.setItem("refreshToken", response.refreshToken);
+
       message.success(t("success_login"));
-      navigate("/home");
+      navigate("/income");
     } catch (error) {
       console.error(error);
-      message.error(t("error"));
+      message.error(t("error") || "Login failed");
     }
   };
 
@@ -49,7 +64,7 @@ const Login = () => {
             rules={[
               {
                 required: true,
-                message: "Bu meýdan hökman doldurulmaly",
+                message: t("required_field"),
               },
             ]}
           >
@@ -62,7 +77,7 @@ const Login = () => {
             rules={[
               {
                 required: true,
-                message: "Bu meýdan hökman doldurulmaly",
+                message: t("required_field"),
               },
             ]}
           >
@@ -74,6 +89,7 @@ const Login = () => {
             className="col-span-12 m-0"
             type="primary"
             size="large"
+            loading={isLoading}
           >
             {t("login")}
           </Button>

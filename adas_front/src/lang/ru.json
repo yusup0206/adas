@@ -140,5 +140,22 @@
   "PENDING": "Ожидание",
   "payment": "Оплата",
   "order_name": "Название заказа",
-  "search_by_order_name": "Поиск по названию заказа"
+  "search_by_order_name": "Поиск по названию заказа",
+  "users": "Пользователи",
+  "roles": "Роли",
+  "login": "Вход",
+  "password": "Пароль",
+  "success_login": "Успешный вход",
+  "add_user": "Добавить пользователя",
+  "edit_user": "Редактировать пользователя",
+  "delete_user_confirm": "Удалить этого пользователя?",
+  "username": "Имя пользователя",
+  "role": "Роль",
+  "leave_blank_password": "Оставьте пустым, чтобы сохранить текущий пароль",
+  "add_role": "Добавить роль",
+  "edit_role": "Редактировать роль",
+  "role_name": "Название роли",
+  "permissions": "Разрешения",
+  "delete_role_confirm": "Удалить эту роль?",
+  "select_permissions": "Выберите разрешения"
 }
