@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface User {
   id: number;
@@ -12,9 +12,19 @@ interface AuthState {
   accessToken: string | null;
 }
 
+let parsedUser = null;
+try {
+  const userItem = localStorage.getItem('user');
+  if (userItem) {
+    parsedUser = JSON.parse(userItem);
+  }
+} catch (e) {
+  console.error("Failed to parse user from localStorage", e);
+}
+
 const initialState: AuthState = {
-  user: null,
-  accessToken: null,
+  user: parsedUser,
+  accessToken: localStorage.getItem('accessToken') || null,
 };
 
 export const authSlice = createSlice({
@@ -27,10 +37,15 @@ export const authSlice = createSlice({
     ) => {
       state.user = action.payload.user;
       state.accessToken = action.payload.accessToken;
+      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem('accessToken', action.payload.accessToken);
     },
     logout: (state) => {
       state.user = null;
       state.accessToken = null;
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     },
   },
 });

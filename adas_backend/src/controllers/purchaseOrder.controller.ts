@@ -30,8 +30,8 @@ export class PurchaseOrderController {
   async recordPayment(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { amount } = req.body;
-      const result = await purchaseOrderService.recordPayment(Number(id), Number(amount));
+      const { amount, payDate } = req.body;
+      const result = await purchaseOrderService.recordPayment(Number(id), Number(amount), payDate);
       res.status(200).json(result);
     } catch (error) {
       console.error(error);

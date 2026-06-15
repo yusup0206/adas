@@ -47,6 +47,7 @@ model PurchaseOrder {
   supplierId        Int
   totalPrice        Decimal             @db.Decimal(15, 2)
   paidAmount        Decimal             @default(0) @db.Decimal(15, 2)
+  lastPayDate       DateTime?
   status            OrderStatus         @default(PENDING)
   items             PurchaseOrderItem[]
   warehouseArrivals WarehouseArrival[]

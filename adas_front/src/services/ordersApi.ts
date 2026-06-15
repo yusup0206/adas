@@ -39,11 +39,11 @@ export const ordersApi = createApi({
       }),
       invalidatesTags: ["Order"],
     }),
-    recordPayment: builder.mutation<any, { orderId: number; amount: number }>({
-      query: ({ orderId, amount }) => ({
+    recordPayment: builder.mutation<any, { orderId: number; amount: number; payDate?: string }>({
+      query: ({ orderId, amount, payDate }) => ({
         url: `/orders/${orderId}/pay`,
         method: "PATCH",
-        body: { amount },
+        body: { amount, payDate },
       }),
       invalidatesTags: ["Order", "Supplier"],
     }),

@@ -39,7 +39,7 @@ export class PurchaseOrderService {
     });
   }
 
-  async recordPayment(orderId: number, amount: number) {
+  async recordPayment(orderId: number, amount: number, payDate?: string | Date) {
     return await prisma.$transaction(async (tx) => {
       const order = await tx.purchaseOrder.findUnique({ where: { id: orderId } });
       if (!order) throw new Error("Order not found");
@@ -48,6 +48,7 @@ export class PurchaseOrderService {
         where: { id: orderId },
         data: {
           paidAmount: { increment: amount },
+          ...(payDate && { lastPayDate: new Date(payDate) }),
         },
       });
 

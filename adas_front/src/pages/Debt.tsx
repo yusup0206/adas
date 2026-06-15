@@ -1,7 +1,16 @@
 import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
-import { Table, Tag, InputNumber, Button, App, Modal, Divider } from "antd";
+import {
+  Table,
+  Tag,
+  InputNumber,
+  Button,
+  App,
+  Modal,
+  Divider,
+  DatePicker,
+} from "antd";
 import type { TableProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -16,6 +25,7 @@ import {
   FaCircleCheck,
   FaFileInvoiceDollar,
 } from "react-icons/fa6";
+import dayjs from "dayjs";
 
 // ── Stat card ──────────────────────────────────────────────────────────────
 const StatCard = ({
@@ -57,11 +67,15 @@ const PayModal = ({
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [amount, setAmount] = useState<number | null>(null);
+  const [payDate, setPayDate] = useState<string | null>(
+    dayjs().format("DD.MM.YYYY"),
+  );
   const [recordPayment, { isLoading: isPaying }] = useRecordPaymentMutation();
 
   if (!record) return null;
 
-  const currentDebt = Number(record.totalPrice) - Number(record.paidAmount || 0);
+  const currentDebt =
+    Number(record.totalPrice) - Number(record.paidAmount || 0);
   const debtLeft = currentDebt - (amount || 0);
 
   const handlePay = async () => {
@@ -70,9 +84,14 @@ const PayModal = ({
       return;
     }
     try {
-      await recordPayment({ orderId: record.id, amount }).unwrap();
+      await recordPayment({
+        orderId: record.id,
+        amount,
+        ...(payDate && { payDate }),
+      }).unwrap();
       message.success(t("payment_recorded"));
       setAmount(null);
+      setPayDate(dayjs().format("DD.MM.YYYY"));
       onClose();
     } catch {
       message.error(t("error"));
@@ -81,6 +100,7 @@ const PayModal = ({
 
   const handleClose = () => {
     setAmount(null);
+    setPayDate(dayjs().format("DD.MM.YYYY"));
     onClose();
   };
 
@@ -99,7 +119,9 @@ const PayModal = ({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-gray-500 mb-1">{t("total_price")}</p>
-            <p className="font-semibold">{Number(record.totalPrice).toFixed(2)} TMT</p>
+            <p className="font-semibold">
+              {Number(record.totalPrice).toFixed(2)} TMT
+            </p>
           </div>
           <div className="bg-green-50 rounded-lg p-3">
             <p className="text-gray-500 mb-1">{t("paid_amount")}</p>
@@ -121,7 +143,22 @@ const PayModal = ({
           </div>
 
           <div className="flex justify-between items-center gap-3">
-            <span className="font-semibold whitespace-nowrap">{t("pay_amount")}:</span>
+            <span className="font-semibold whitespace-nowrap">
+              {t("pay_date")}:
+            </span>
+            <DatePicker
+              className="w-full"
+              value={payDate ? dayjs(payDate) : null}
+              onChange={(date, dateString) => setPayDate(dateString as string)}
+              format="DD.MM.YYYY"
+              allowClear={false}
+            />
+          </div>
+
+          <div className="flex justify-between items-center gap-3">
+            <span className="font-semibold whitespace-nowrap">
+              {t("pay_amount")}:
+            </span>
             <InputNumber
               className="w-full"
               min={0}
@@ -143,7 +180,9 @@ const PayModal = ({
                   : "bg-blue-50 text-blue-600"
               }`}
             >
-              <span className="font-semibold">{t("debt_left_after_payment")}:</span>
+              <span className="font-semibold">
+                {t("debt_left_after_payment")}:
+              </span>
               <span className="font-bold">
                 {debtLeft <= 0 ? "0.00" : debtLeft.toFixed(2)} TMT
               </span>
@@ -187,9 +226,7 @@ const Debt = () => {
       title: t("order_name"),
       dataIndex: "orderName",
       key: "orderName",
-      render: (name: string) => (
-        <span className="font-semibold">{name}</span>
-      ),
+      render: (name: string) => <span className="font-semibold">{name}</span>,
     },
     {
       title: t("supplier"),
@@ -228,13 +265,21 @@ const Debt = () => {
       },
     },
     {
-      title: t("status"),
+      title: t("order_status"),
       dataIndex: "status",
       key: "status",
       render: (status: string) => (
         <Tag color={status === "RECEIVED" ? "green" : "orange"}>
           {t(status)}
         </Tag>
+      ),
+    },
+    {
+      title: t("lastPayDate"),
+      dataIndex: "lastPayDate",
+      key: "lastPayDate",
+      render: (lastPayDate: string) => (
+        <p>{lastPayDate ? dayjs(lastPayDate).format("DD.MM.YYYY") : "-"}</p>
       ),
     },
     {
@@ -286,9 +331,7 @@ const Debt = () => {
               icon={<FaFileInvoiceDollar />}
               label={t("unpaid_orders_count")}
               value={
-                summaryLoading
-                  ? "..."
-                  : String(summary?.unpaidOrdersCount ?? 0)
+                summaryLoading ? "..." : String(summary?.unpaidOrdersCount ?? 0)
               }
               color="text-orange-500"
               bg="bg-orange-50"
