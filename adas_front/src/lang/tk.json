@@ -157,5 +157,7 @@
   "role_name": "Rol ady",
   "permissions": "Hukuklar",
   "delete_role_confirm": "Bu roly öçürmelimi?",
-  "select_permissions": "Hukuklary saýlaň"
+  "select_permissions": "Hukuklary saýlaň",
+  "last_pay_date": "Iň soňky töleg senesi",
+  "pay_date": "Töleg senesi"
 }

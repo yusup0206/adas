@@ -157,5 +157,7 @@
   "role_name": "Название роли",
   "permissions": "Разрешения",
   "delete_role_confirm": "Удалить эту роль?",
-  "select_permissions": "Выберите разрешения"
+  "select_permissions": "Выберите разрешения",
+  "last_pay_date": "Дата последней выплаты",
+  "pay_date": "Дата оплаты"
 }

@@ -67,9 +67,7 @@ const PayModal = ({
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [amount, setAmount] = useState<number | null>(null);
-  const [payDate, setPayDate] = useState<string | null>(
-    dayjs().format("DD.MM.YYYY"),
-  );
+  const [payDate, setPayDate] = useState<ReturnType<typeof dayjs>>(dayjs());
   const [recordPayment, { isLoading: isPaying }] = useRecordPaymentMutation();
 
   if (!record) return null;
@@ -87,11 +85,11 @@ const PayModal = ({
       await recordPayment({
         orderId: record.id,
         amount,
-        ...(payDate && { payDate }),
+        payDate: payDate.format("YYYY-MM-DD"),
       }).unwrap();
       message.success(t("payment_recorded"));
       setAmount(null);
-      setPayDate(dayjs().format("DD.MM.YYYY"));
+      setPayDate(dayjs());
       onClose();
     } catch {
       message.error(t("error"));
@@ -100,7 +98,7 @@ const PayModal = ({
 
   const handleClose = () => {
     setAmount(null);
-    setPayDate(dayjs().format("DD.MM.YYYY"));
+    setPayDate(dayjs());
     onClose();
   };
 
@@ -148,8 +146,8 @@ const PayModal = ({
             </span>
             <DatePicker
               className="w-full"
-              value={payDate ? dayjs(payDate) : null}
-              onChange={(date, dateString) => setPayDate(dateString as string)}
+              value={payDate}
+              onChange={(date) => setPayDate(date ?? dayjs())}
               format="DD.MM.YYYY"
               allowClear={false}
             />
@@ -275,7 +273,7 @@ const Debt = () => {
       ),
     },
     {
-      title: t("lastPayDate"),
+      title: t("last_pay_date"),
       dataIndex: "lastPayDate",
       key: "lastPayDate",
       render: (lastPayDate: string) => (
