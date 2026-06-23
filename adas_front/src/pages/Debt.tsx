@@ -126,13 +126,13 @@ const PayModal = ({
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-gray-500 mb-1">{t("total_price")}</p>
             <p className="font-semibold">
-              {Number(record.totalPrice).toFixed(2)} TMT
+              {Number(record.totalPrice).toFixed(2)} $
             </p>
           </div>
           <div className="bg-green-50 rounded-lg p-3">
             <p className="text-gray-500 mb-1">{t("paid_amount")}</p>
             <p className="font-semibold text-green-600">
-              {Number(record.paidAmount || 0).toFixed(2)} TMT
+              {Number(record.paidAmount || 0).toFixed(2)} $
             </p>
           </div>
         </div>
@@ -143,7 +143,7 @@ const PayModal = ({
           <div className="flex justify-between items-center">
             <span className="font-semibold">{t("current_debt")}:</span>
             <span className="text-red-500 font-bold text-base">
-              {currentDebt.toFixed(2)} TMT
+              {currentDebt.toFixed(2)} $
             </span>
           </div>
 
@@ -188,7 +188,7 @@ const PayModal = ({
                 {t("debt_left_after_payment")}:
               </span>
               <span className="font-bold">
-                {debtLeft <= 0 ? "0.00" : debtLeft.toFixed(2)} TMT
+                {debtLeft <= 0 ? "0.00" : debtLeft.toFixed(2)} $
               </span>
             </div>
           )}
@@ -283,7 +283,7 @@ const SupplierDebtPanel = () => {
       dataIndex: "totalPrice",
       key: "totalPrice",
       render: (v: number) => (
-        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+        <span className="font-medium">{Number(v).toFixed(2)} $</span>
       ),
     },
     {
@@ -292,7 +292,7 @@ const SupplierDebtPanel = () => {
       key: "paidAmount",
       render: (v: number) => (
         <span className="text-green-600 font-medium">
-          {Number(v || 0).toFixed(2)} TMT
+          {Number(v || 0).toFixed(2)} $
         </span>
       ),
     },
@@ -302,7 +302,7 @@ const SupplierDebtPanel = () => {
       render: (_, record) => {
         const debt = Number(record.totalPrice) - Number(record.paidAmount || 0);
         return (
-          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} $</span>
         );
       },
     },
@@ -349,7 +349,7 @@ const SupplierDebtPanel = () => {
           value={
             summaryLoading
               ? "..."
-              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
+              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} $`
           }
           color="text-red-500"
           bg="bg-red-50"
@@ -360,7 +360,7 @@ const SupplierDebtPanel = () => {
           value={
             summaryLoading
               ? "..."
-              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
+              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} $`
           }
           color="text-green-600"
           bg="bg-green-50"
@@ -493,7 +493,7 @@ const ImportLoansPanel = () => {
       title: t("total_price"),
       dataIndex: "totalAmount",
       render: (v: number) => (
-        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+        <span className="font-medium">{Number(v).toFixed(2)} $</span>
       ),
     },
     {
@@ -501,7 +501,7 @@ const ImportLoansPanel = () => {
       dataIndex: "paidAmount",
       render: (v: number) => (
         <span className="text-green-600 font-medium">
-          {Number(v || 0).toFixed(2)} TMT
+          {Number(v || 0).toFixed(2)} $
         </span>
       ),
     },
@@ -510,7 +510,7 @@ const ImportLoansPanel = () => {
       render: (_, r) => {
         const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
         return (
-          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} $</span>
         );
       },
     },
@@ -580,7 +580,7 @@ const ImportLoansPanel = () => {
       title: t("total_price"),
       dataIndex: "totalAmount",
       render: (v: number) => (
-        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+        <span className="font-medium">{Number(v).toFixed(2)} $</span>
       ),
     },
     {
@@ -588,7 +588,7 @@ const ImportLoansPanel = () => {
       dataIndex: "paidAmount",
       render: (v: number) => (
         <span className="text-green-600 font-medium">
-          {Number(v || 0).toFixed(2)} TMT
+          {Number(v || 0).toFixed(2)} $
         </span>
       ),
     },
@@ -597,7 +597,7 @@ const ImportLoansPanel = () => {
       render: (_, r) => {
         const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
         return (
-          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} $</span>
         );
       },
     },
@@ -634,7 +634,7 @@ const ImportLoansPanel = () => {
           value={
             summaryLoading
               ? "..."
-              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
+              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} $`
           }
           color="text-red-500"
           bg="bg-red-50"
@@ -645,7 +645,7 @@ const ImportLoansPanel = () => {
           value={
             summaryLoading
               ? "..."
-              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
+              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} $`
           }
           color="text-green-600"
           bg="bg-green-50"
@@ -811,7 +811,7 @@ const ExportLoansPanel = () => {
       render: (_, r) => {
         const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
         return (
-          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} $</span>
         );
       },
     },
@@ -881,7 +881,7 @@ const ExportLoansPanel = () => {
       title: t("total_price"),
       dataIndex: "totalAmount",
       render: (v: number) => (
-        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+        <span className="font-medium">{Number(v).toFixed(2)} $</span>
       ),
     },
     {
@@ -889,7 +889,7 @@ const ExportLoansPanel = () => {
       dataIndex: "paidAmount",
       render: (v: number) => (
         <span className="text-green-600 font-medium">
-          {Number(v || 0).toFixed(2)} TMT
+          {Number(v || 0).toFixed(2)} $
         </span>
       ),
     },
@@ -898,7 +898,7 @@ const ExportLoansPanel = () => {
       render: (_, r) => {
         const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
         return (
-          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} $</span>
         );
       },
     },
@@ -935,7 +935,7 @@ const ExportLoansPanel = () => {
           value={
             summaryLoading
               ? "..."
-              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
+              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} $`
           }
           color="text-red-500"
           bg="bg-red-50"
@@ -946,7 +946,7 @@ const ExportLoansPanel = () => {
           value={
             summaryLoading
               ? "..."
-              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
+              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} $`
           }
           color="text-green-600"
           bg="bg-green-50"

@@ -13,7 +13,7 @@ import {
 } from "antd";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FaArrowRight, FaPlus, FaTrash } from "react-icons/fa6";
+import { FaArrowRight, FaTrash } from "react-icons/fa6";
 import {
   useCreateDispatchMutation,
   useGetStockQuery,
@@ -32,6 +32,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
 
   const { data: stock, refetch: refetchStock } = useGetStockQuery({
     type: warehouseType,
@@ -47,6 +48,18 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
     return map;
   }, [stock]);
 
+  // Product map for label lookup
+  const productMap = useMemo(() => {
+    const map = new Map<number, string>();
+    stock?.forEach((s) =>
+      map.set(
+        s.productId,
+        (i18n.language === "ru" ? s.product?.name_ru : s.product?.name_tm) ?? "",
+      ),
+    );
+    return map;
+  }, [stock, i18n.language]);
+
   // Live total calculation
   const items = Form.useWatch("items", form);
   const totalSell = useMemo(() => {
@@ -60,6 +73,12 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
   const handleOpen = () => {
     refetchStock();
     setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedProductIds([]);
+    form.resetFields();
   };
 
   const handleSubmit = async (values: any) => {
@@ -82,6 +101,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
       }).unwrap();
       message.success(t("successfully_created"));
       form.resetFields();
+      setSelectedProductIds([]);
       setOpen(false);
     } catch (err: any) {
       message.error(err?.data?.message || t("error"));
@@ -98,6 +118,23 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
         } (${t("in_stock")}: ${s.currentStock})`,
       })) || [];
 
+  // When product selection changes, sync into form items
+  const handleProductSelectionChange = (ids: number[]) => {
+    setSelectedProductIds(ids);
+    const currentItems: any[] = form.getFieldValue("items") || [];
+    // Build a map of existing item data keyed by productId
+    const existingMap = new Map<number, any>();
+    currentItems.forEach((item) => {
+      if (item?.productId) existingMap.set(item.productId, item);
+    });
+    // Produce new items list preserving existing quantity/sellPrice
+    const newItems = ids.map((id) => {
+      if (existingMap.has(id)) return existingMap.get(id);
+      return { productId: id, quantity: undefined, sellPrice: undefined };
+    });
+    form.setFieldsValue({ items: newItems.length ? newItems : [] });
+  };
+
   return (
     <>
       <Button
@@ -112,7 +149,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
       <Modal
         title={t("dispatch_product")}
         open={open}
-        onCancel={() => setOpen(false)}
+        onCancel={handleClose}
         footer={null}
         centered
         width={800}
@@ -121,7 +158,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ items: [{}] }}
+          initialValues={{ items: [] }}
         >
           {/* Client, date & isLoan */}
           <div className="grid grid-cols-2 gap-4">
@@ -174,69 +211,78 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
 
           <Divider orientation="center">{t("products")}</Divider>
 
-          {/* Multi-item list */}
-          <Form.List name="items">
-            {(fields, { add, remove }) => (
-              <div className="w-full flex flex-col gap-8">
-                {fields.map(({ key, name, ...restField }) => {
-                  const selectedProductId = items?.[name]?.productId;
-                  const maxQty = selectedProductId
-                    ? (stockMap.get(selectedProductId) ?? undefined)
-                    : undefined;
+          {/* Step 1: Multi-select products */}
+          <Form.Item label={t("select_product")}>
+            <Select
+              mode="multiple"
+              placeholder={t("select_product")}
+              className="w-full"
+              showSearch
+              optionFilterProp="label"
+              options={productOptions}
+              value={selectedProductIds}
+              onChange={handleProductSelectionChange}
+              allowClear
+            />
+          </Form.Item>
 
-                  return (
-                    <div
-                      key={key}
-                      className="w-full grid grid-cols-1 md:grid-cols-2 gap-4"
-                    >
-                      <Form.Item
-                        {...restField}
-                        name={[name, "productId"]}
-                        rules={[
-                          { required: true, message: t("required_field") },
-                        ]}
-                        className="w-full"
+          {/* Step 2: Items list — only shown when products are selected */}
+          {selectedProductIds.length > 0 && (
+            <Form.List name="items">
+              {(fields, { remove }) => (
+                <div className="w-full flex flex-col gap-4">
+                  {/* Header row */}
+                  <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wide px-1">
+                    <span>{t("product")}</span>
+                    <span>{t("quantity")}</span>
+                    <span>{t("sell_price")}</span>
+                    <span />
+                  </div>
+
+                  {fields.map(({ key, name, ...restField }) => {
+                    const productId = items?.[name]?.productId;
+                    const productName = productId
+                      ? (productMap.get(productId) ?? "")
+                      : "";
+                    const maxQty = productId
+                      ? (stockMap.get(productId) ?? undefined)
+                      : undefined;
+
+                    return (
+                      <div
+                        key={key}
+                        className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-start"
                       >
-                        <Select
-                          placeholder={t("select_product")}
-                          className="w-full"
-                          showSearch
-                          optionFilterProp="label"
-                          options={productOptions}
-                          onChange={() => {
-                            // Reset quantity when product changes
-                            const currentItems =
-                              form.getFieldValue("items") || [];
-                            const updated = [...currentItems];
-                            updated[name] = {
-                              ...updated[name],
-                              quantity: undefined,
-                            };
-                            form.setFieldsValue({ items: updated });
-                            // Re-validate quantity field
-                            form.validateFields([["items", name, "quantity"]]);
-                          }}
-                        />
-                      </Form.Item>
-                      <div className="w-full flex items-start gap-4">
+                        {/* Product name (read-only display) */}
+                        <div className="flex items-center h-8 px-3 rounded-md bg-gray-50 border border-gray-200 text-sm font-medium truncate">
+                          {productName}
+                        </div>
+
+                        {/* Hidden productId field to keep form value */}
                         <Form.Item
                           {...restField}
-                          className="w-full"
+                          name={[name, "productId"]}
+                          hidden
+                        >
+                          <InputNumber />
+                        </Form.Item>
+
+                        <Form.Item
+                          {...restField}
+                          className="w-full mb-0"
                           name={[name, "quantity"]}
                           rules={[
                             { required: true, message: t("required_field") },
                             {
                               validator: (_, value) => {
                                 if (!value) return Promise.resolve();
-                                const selectedProductId = form.getFieldValue([
+                                const pid = form.getFieldValue([
                                   "items",
                                   name,
                                   "productId",
                                 ]);
-                                if (!selectedProductId)
-                                  return Promise.resolve();
-                                const available =
-                                  stockMap.get(selectedProductId) ?? 0;
+                                if (!pid) return Promise.resolve();
+                                const available = stockMap.get(pid) ?? 0;
                                 if (value > available) {
                                   return Promise.reject(
                                     new Error(
@@ -263,7 +309,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
                           rules={[
                             { required: true, message: t("required_field") },
                           ]}
-                          className="w-full"
+                          className="w-full mb-0"
                         >
                           <InputNumber
                             min={0}
@@ -274,42 +320,40 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
                           />
                         </Form.Item>
 
-                        {fields.length > 1 && (
-                          <div className="w-fit">
-                            <Button
-                              type="text"
-                              icon={<FaTrash />}
-                              onClick={() => remove(name)}
-                              danger
-                            />
-                          </div>
-                        )}
+                        <div className="pt-1">
+                          <Button
+                            type="text"
+                            icon={<FaTrash />}
+                            onClick={() => {
+                              // Remove from both form list and selectedProductIds
+                              const pid = form.getFieldValue([
+                                "items",
+                                name,
+                                "productId",
+                              ]);
+                              remove(name);
+                              setSelectedProductIds((prev) =>
+                                prev.filter((id) => id !== pid),
+                              );
+                            }}
+                            danger
+                          />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    block
-                    icon={<FaPlus />}
-                  >
-                    {t("add_item")}
-                  </Button>
-                </Form.Item>
-              </div>
-            )}
-          </Form.List>
+                    );
+                  })}
+                </div>
+              )}
+            </Form.List>
+          )}
 
           {/* Total + buttons */}
           <div className="flex justify-between items-center mt-4 border-t pt-4">
             <div className="text-lg font-bold">
-              {t("total")}: {totalSell.toFixed(2)} TMT
+              {t("total")}: {totalSell.toFixed(2)} $
             </div>
             <Space>
-              <Button size="large" onClick={() => setOpen(false)}>
+              <Button size="large" onClick={handleClose}>
                 {t("cancel")}
               </Button>
               <Button

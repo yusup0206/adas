@@ -1,5 +1,15 @@
 import type { LinkedLoan, Order } from "@/interfaces/orders.interface";
-import { Modal, Table, Divider, Tabs, InputNumber, Form, Button, App, Tag } from "antd";
+import {
+  Modal,
+  Table,
+  Divider,
+  Tabs,
+  InputNumber,
+  Form,
+  Button,
+  App,
+  Tag,
+} from "antd";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { RiEyeLine } from "react-icons/ri";
@@ -52,27 +62,33 @@ const LoansTab = ({ loans }: { loans?: LinkedLoan[] }) => {
     {
       title: t("total_price"),
       dataIndex: "totalAmount",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("paid_amount"),
       dataIndex: "paidAmount",
       render: (v: number) => (
-        <span className="text-green-600 font-medium">{Number(v).toFixed(2)} TMT</span>
+        <span className="text-green-600 font-medium">
+          {Number(v).toFixed(2)} $
+        </span>
       ),
     },
     {
       title: t("current_debt"),
       render: (_: any, r: LinkedLoan) => {
         const debt = Number(r.totalAmount) - Number(r.paidAmount);
-        return <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>;
+        return (
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} $</span>
+        );
       },
     },
     {
       title: t("status"),
       dataIndex: "status",
       render: (s: string) => (
-        <Tag color={s === "CLOSED" ? "green" : s === "PARTIAL" ? "blue" : "orange"}>
+        <Tag
+          color={s === "CLOSED" ? "green" : s === "PARTIAL" ? "blue" : "orange"}
+        >
           {t(`loan_status_${s}`)}
         </Tag>
       ),
@@ -97,15 +113,15 @@ const LoansTab = ({ loans }: { loans?: LinkedLoan[] }) => {
       <div className="grid grid-cols-3 gap-4 text-center">
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-xs text-gray-500 mb-1">{t("total_price")}</p>
-          <p className="font-bold text-gray-800">{totalLoan.toFixed(2)} TMT</p>
+          <p className="font-bold text-gray-800">{totalLoan.toFixed(2)} $</p>
         </div>
         <div className="bg-green-50 rounded-lg p-3">
           <p className="text-xs text-gray-500 mb-1">{t("paid_amount")}</p>
-          <p className="font-bold text-green-600">{totalPaid.toFixed(2)} TMT</p>
+          <p className="font-bold text-green-600">{totalPaid.toFixed(2)} $</p>
         </div>
         <div className="bg-red-50 rounded-lg p-3">
           <p className="text-xs text-gray-500 mb-1">{t("current_debt")}</p>
-          <p className="font-bold text-red-500">{totalDebt.toFixed(2)} TMT</p>
+          <p className="font-bold text-red-500">{totalDebt.toFixed(2)} $</p>
         </div>
       </div>
     </div>
@@ -157,7 +173,7 @@ const ExpensesTab = ({ record }: { record: Order }) => {
               step={0.01}
               min={0}
               placeholder="0.00"
-              suffix="TMT"
+              suffix="$"
             />
           </Form.Item>
         ))}
@@ -168,7 +184,7 @@ const ExpensesTab = ({ record }: { record: Order }) => {
       <div className="flex items-center justify-between">
         <div className="text-base font-semibold">
           {t("total_expenses")}:{" "}
-          <span className="text-blue-600">{total.toFixed(2)} TMT</span>
+          <span className="text-blue-600">{total.toFixed(2)} $</span>
         </div>
         <Button type="primary" htmlType="submit" loading={isLoading}>
           {t("save")}
@@ -199,12 +215,12 @@ const UpdateModal = ({ record }: { record: Order }) => {
     {
       title: t("unit_price"),
       dataIndex: "unitPrice",
-      render: (val: number) => `${val} TMT`,
+      render: (val: number) => `${val} $`,
     },
     {
       title: t("total"),
       dataIndex: "totalPrice",
-      render: (val: number) => `${val} TMT`,
+      render: (val: number) => `${val} $`,
     },
   ];
 
@@ -229,17 +245,16 @@ const UpdateModal = ({ record }: { record: Order }) => {
               {record.isPaid ? t("paid") : t("unpaid")}
             </div>
             <div>
-              <strong>{t("total_price")}:</strong> {record.totalPrice} TMT
+              <strong>{t("total_price")}:</strong> {record.totalPrice} $
             </div>
             <div>
-              <strong>{t("paid_amount")}:</strong>{" "}
-              {record.paidAmount || 0} TMT
+              <strong>{t("paid_amount")}:</strong> {record.paidAmount || 0} $
             </div>
             {!record.isPaid && (
               <div className="col-span-2">
                 <strong className="text-red-500">{t("current_debt")}:</strong>{" "}
                 <span className="text-red-500 font-bold">
-                  {currentDebt.toFixed(2)} TMT
+                  {currentDebt.toFixed(2)} $
                 </span>
               </div>
             )}

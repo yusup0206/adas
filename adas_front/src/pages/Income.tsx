@@ -22,6 +22,7 @@ import {
   FaMoneyBillTransfer,
   FaFileInvoice,
 } from "react-icons/fa6";
+import dayjs from "dayjs";
 
 // ── Stat card (matches Debt page pattern) ─────────────────────────────────
 const StatCard = ({
@@ -75,7 +76,9 @@ const Income = () => {
       key: "order",
       render: (_, r) =>
         r.id === 0 ? (
-          <span className="font-semibold text-gray-500">{t("unlinked_transactions")}</span>
+          <span className="font-semibold text-gray-500">
+            {t("unlinked_transactions")}
+          </span>
         ) : (
           <Tag color="blue">
             #{r.id} — {r.orderName}
@@ -91,7 +94,7 @@ const Income = () => {
           "—"
         ) : (
           <span className="text-gray-600">
-            {new Date(d).toLocaleDateString()}
+            {dayjs(d).format("DD.MM.YYYY")}
           </span>
         ),
     },
@@ -100,7 +103,11 @@ const Income = () => {
       key: "supplier",
       render: (_, r) =>
         r.supplier ? (
-          isRu ? r.supplier.ru : r.supplier.tm
+          isRu ? (
+            r.supplier.ru
+          ) : (
+            r.supplier.tm
+          )
         ) : (
           <span className="text-gray-400">—</span>
         ),
@@ -110,23 +117,28 @@ const Income = () => {
       dataIndex: "itemsCost",
       key: "itemsCost",
       render: (v: number, r) =>
-        r.id === 0 ? "—" : `${Number(v).toFixed(2)} TMT`,
+        r.id === 0 ? "—" : `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("additional_expenses"),
       key: "expensesTotal",
       render: (_, r) => {
         if (r.id === 0) return "—";
-        if (!r.expensesTotal || r.expensesTotal === 0) return "0.00 TMT";
-        
+        if (!r.expensesTotal || r.expensesTotal === 0) return "0.00 $";
+
         const content = (
           <div style={{ minWidth: 200 }} className="space-y-1.5 p-1">
             {Object.entries(r.expensesBreakdown || {}).map(([key, val]) => {
               if (!val || Number(val) === 0) return null;
               return (
-                <div key={key} className="flex justify-between gap-6 text-xs pb-1 border-b border-gray-100 last:border-0 last:pb-0">
+                <div
+                  key={key}
+                  className="flex justify-between gap-6 text-xs pb-1 border-b border-gray-100 last:border-0 last:pb-0"
+                >
                   <span className="text-gray-500">{t(`expense_${key}`)}:</span>
-                  <span className="font-semibold">{Number(val).toFixed(2)} TMT</span>
+                  <span className="font-semibold">
+                    {Number(val).toFixed(2)} $
+                  </span>
                 </div>
               );
             })}
@@ -134,9 +146,13 @@ const Income = () => {
         );
 
         return (
-          <Popover content={content} title={t("additional_expenses")} trigger="hover">
+          <Popover
+            content={content}
+            title={t("additional_expenses")}
+            trigger="hover"
+          >
             <span className="text-orange-500 font-medium cursor-pointer underline decoration-dotted">
-              {Number(r.expensesTotal).toFixed(2)} TMT
+              {Number(r.expensesTotal).toFixed(2)} $
             </span>
           </Popover>
         );
@@ -151,7 +167,7 @@ const Income = () => {
           "—"
         ) : (
           <span className="text-red-500 font-semibold">
-            {Number(v).toFixed(2)} TMT
+            {Number(v).toFixed(2)} $
           </span>
         ),
     },
@@ -163,7 +179,7 @@ const Income = () => {
         return (
           <Tooltip title={`${t("cash")} + ${t("loan_repayment")} (cash)`}>
             <span className="text-gray-600 font-medium cursor-help border-b border-dashed border-gray-300">
-              {cashAmt.toFixed(2)} TMT
+              {cashAmt.toFixed(2)} $
             </span>
           </Tooltip>
         );
@@ -175,7 +191,7 @@ const Income = () => {
       key: "exportSales",
       render: (v: number) => (
         <span className="text-gray-600 font-medium">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -185,7 +201,7 @@ const Income = () => {
       key: "totalRevenue",
       render: (v: number) => (
         <span className="text-green-600 font-bold">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -199,7 +215,7 @@ const Income = () => {
           style={{ borderRadius: 6, fontWeight: "bold" }}
         >
           {v >= 0 ? "+" : ""}
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </Tag>
       ),
     },
@@ -219,9 +235,7 @@ const Income = () => {
       title: t("name"),
       key: "name",
       render: (_, r) => (
-        <span className="font-semibold">
-          {isRu ? r.name_ru : r.name_tm}
-        </span>
+        <span className="font-semibold">{isRu ? r.name_ru : r.name_tm}</span>
       ),
     },
     {
@@ -250,7 +264,7 @@ const Income = () => {
       key: "totalRevenue",
       render: (v: number) => (
         <span className="text-green-600 font-semibold">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -260,7 +274,7 @@ const Income = () => {
       key: "totalCost",
       render: (v: number) => (
         <span className="text-red-500 font-semibold">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -274,7 +288,7 @@ const Income = () => {
           style={{ borderRadius: 6, fontWeight: "bold" }}
         >
           {v >= 0 ? "+" : ""}
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </Tag>
       ),
     },
@@ -296,7 +310,7 @@ const Income = () => {
       key: "date",
       render: (d: string) => (
         <span className="text-gray-600">
-          {new Date(d).toLocaleDateString()}
+          {dayjs(d).format("DD.MM.YYYY")}
         </span>
       ),
     },
@@ -323,7 +337,13 @@ const Income = () => {
       title: t("client"),
       key: "client",
       render: (_, r) =>
-        r.client ? (isRu ? r.client.ru : r.client.tm) : (
+        r.client ? (
+          isRu ? (
+            r.client.ru
+          ) : (
+            r.client.tm
+          )
+        ) : (
           <span className="text-gray-400">—</span>
         ),
     },
@@ -341,7 +361,7 @@ const Income = () => {
       title: t("sell_price"),
       dataIndex: "sellPrice",
       key: "sellPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("total_sell_price"),
@@ -349,7 +369,7 @@ const Income = () => {
       key: "totalSellPrice",
       render: (v: number) => (
         <span className="text-green-600 font-bold">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -357,8 +377,7 @@ const Income = () => {
       title: t("note"),
       dataIndex: "note",
       key: "note",
-      render: (v: string) =>
-        v ? v : <span className="text-gray-400">—</span>,
+      render: (v: string) => (v ? v : <span className="text-gray-400">—</span>),
     },
   ];
 
@@ -378,7 +397,7 @@ const Income = () => {
       key: "date",
       render: (d: string) => (
         <span className="text-gray-600">
-          {new Date(d).toLocaleDateString()}
+          {dayjs(d).format("DD.MM.YYYY")}
         </span>
       ),
     },
@@ -404,7 +423,13 @@ const Income = () => {
       title: t("supplier"),
       key: "supplier",
       render: (_, r) =>
-        r.supplier ? (isRu ? r.supplier.ru : r.supplier.tm) : (
+        r.supplier ? (
+          isRu ? (
+            r.supplier.ru
+          ) : (
+            r.supplier.tm
+          )
+        ) : (
           <span className="text-gray-400">—</span>
         ),
     },
@@ -422,16 +447,14 @@ const Income = () => {
       title: t("unit_price"),
       dataIndex: "unitPrice",
       key: "unitPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("total_cost"),
       dataIndex: "totalCost",
       key: "totalCost",
       render: (v: number) => (
-        <span className="text-red-500 font-bold">
-          {Number(v).toFixed(2)} TMT
-        </span>
+        <span className="text-red-500 font-bold">{Number(v).toFixed(2)} $</span>
       ),
     },
     {
@@ -440,7 +463,7 @@ const Income = () => {
       key: "expensesTotal",
       render: (v: number) => (
         <span className="text-orange-500 font-medium">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -462,7 +485,7 @@ const Income = () => {
       key: "lastPayDate",
       render: (d: string) => (
         <span className="text-gray-600">
-          {d ? new Date(d).toLocaleDateString() : "—"}
+          {d ? dayjs(d).format("DD.MM.YYYY") : "—"}
         </span>
       ),
     },
@@ -480,7 +503,13 @@ const Income = () => {
       title: t("client"),
       key: "client",
       render: (_, r) =>
-        r.client ? (isRu ? r.client.ru : r.client.tm) : (
+        r.client ? (
+          isRu ? (
+            r.client.ru
+          ) : (
+            r.client.tm
+          )
+        ) : (
           <span className="text-gray-400">—</span>
         ),
     },
@@ -502,7 +531,7 @@ const Income = () => {
       key: "paidAmount",
       render: (v: number) => (
         <span className="text-green-600 font-bold">
-          {Number(v).toFixed(2)} TMT
+          {Number(v).toFixed(2)} $
         </span>
       ),
     },
@@ -588,28 +617,28 @@ const Income = () => {
           className="overflow-x-auto"
         />
       ),
-      },
-      {
-        key: "repayments",
-        label: (
-          <Space>
-            <FaMoneyBillTransfer />
-            {t("loan_repayments")}
-          </Space>
-        ),
-        children: (
-          <Table
-            loading={isLoading}
-            columns={loanRepaymentColumns}
-            dataSource={data?.loanRepayments || []}
-            rowKey="id"
-            size="large"
-            pagination={{ position: ["bottomCenter"], pageSize: 10 }}
-            className="overflow-x-auto"
-          />
-        ),
-      },
-    ];
+    },
+    {
+      key: "repayments",
+      label: (
+        <Space>
+          <FaMoneyBillTransfer />
+          {t("loan_repayments")}
+        </Space>
+      ),
+      children: (
+        <Table
+          loading={isLoading}
+          columns={loanRepaymentColumns}
+          dataSource={data?.loanRepayments || []}
+          rowKey="id"
+          size="large"
+          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          className="overflow-x-auto"
+        />
+      ),
+    },
+  ];
 
   const profit = data?.totalProfit ?? 0;
 
@@ -626,7 +655,7 @@ const Income = () => {
               value={
                 isLoading
                   ? "..."
-                  : `${Number(data?.totalRevenue ?? 0).toFixed(2)} TMT`
+                  : `${Number(data?.totalRevenue ?? 0).toFixed(2)} $`
               }
               sub={`${t("total_sales")}: ${data?.sales?.length ?? 0}`}
               color="text-green-600"
@@ -638,7 +667,7 @@ const Income = () => {
               value={
                 isLoading
                   ? "..."
-                  : `${Number(data?.totalCost ?? 0).toFixed(2)} TMT`
+                  : `${Number(data?.totalCost ?? 0).toFixed(2)} $`
               }
               sub={`${t("total_purchases")}: ${data?.purchases?.length ?? 0}`}
               color="text-red-500"
@@ -650,7 +679,7 @@ const Income = () => {
               value={
                 isLoading
                   ? "..."
-                  : `${profit >= 0 ? "+" : ""}${Number(profit).toFixed(2)} TMT`
+                  : `${profit >= 0 ? "+" : ""}${Number(profit).toFixed(2)} $`
               }
               color={profit >= 0 ? "text-blue-600" : "text-red-500"}
               bg={profit >= 0 ? "bg-blue-50" : "bg-red-50"}
@@ -659,11 +688,7 @@ const Income = () => {
 
           {/* ── Tables ── */}
           <Box>
-            <Tabs
-              defaultActiveKey="products"
-              items={tabs}
-              size="large"
-            />
+            <Tabs defaultActiveKey="products" items={tabs} size="large" />
           </Box>
         </Section>
       </section>

@@ -16,12 +16,22 @@ import { EyeOutlined } from "@ant-design/icons";
 import type { TabsProps, TableProps } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { WarehouseType, WarehouseArrival, WarehouseDispatch, WarehouseStockItem, DispatchGroup } from "@/interfaces/warehouses.interface";
+import type {
+  WarehouseType,
+  WarehouseArrival,
+  WarehouseDispatch,
+  WarehouseStockItem,
+  DispatchGroup,
+} from "@/interfaces/warehouses.interface";
 import dayjs from "dayjs";
 
 const { Text } = Typography;
 
-const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => {
+const WarehousePanel = ({
+  warehouseType,
+}: {
+  warehouseType: WarehouseType;
+}) => {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
@@ -29,14 +39,26 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
   const [dispatchPage, setDispatchPage] = useState(1);
   const pageSize = 10;
 
-  const { data: stock, isLoading: stockLoading } = useGetStockQuery({ type: warehouseType });
-  const { data: arrivals, isLoading: arrivalsLoading } = useGetArrivalsQuery({ type: warehouseType, page: arrivalPage, pageSize });
-  const { data: dispatches, isLoading: dispatchesLoading } = useGetDispatchesQuery({ type: warehouseType, page: dispatchPage, pageSize });
+  const { data: stock, isLoading: stockLoading } = useGetStockQuery({
+    type: warehouseType,
+  });
+  const { data: arrivals, isLoading: arrivalsLoading } = useGetArrivalsQuery({
+    type: warehouseType,
+    page: arrivalPage,
+    pageSize,
+  });
+  const { data: dispatches, isLoading: dispatchesLoading } =
+    useGetDispatchesQuery({
+      type: warehouseType,
+      page: dispatchPage,
+      pageSize,
+    });
 
   const [deleteArrival] = useDeleteArrivalMutation();
   const [deleteDispatch] = useDeleteDispatchMutation();
 
-  const [viewProductsGroup, setViewProductsGroup] = useState<DispatchGroup | null>(null);
+  const [viewProductsGroup, setViewProductsGroup] =
+    useState<DispatchGroup | null>(null);
 
   // ── Stock columns ──────────────────────────────────────────────────────────
   const stockColumns: TableProps<WarehouseStockItem>["columns"] = [
@@ -47,11 +69,14 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     },
     {
       title: t("product"),
-      render: (_, r) => lang === "ru" ? r.product?.name_ru : r.product?.name_tm,
+      render: (_, r) =>
+        lang === "ru" ? r.product?.name_ru : r.product?.name_tm,
     },
     {
       title: t("unit"),
-      render: (_, r) => (lang === "ru" ? r.product?.unit?.name_ru : r.product?.unit?.name_tm) || "-",
+      render: (_, r) =>
+        (lang === "ru" ? r.product?.unit?.name_ru : r.product?.unit?.name_tm) ||
+        "-",
     },
     {
       title: t("total_arrived"),
@@ -66,9 +91,7 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     {
       title: t("in_stock"),
       dataIndex: "currentStock",
-      render: (v: number) => (
-        <Tag color={v > 0 ? "green" : "red"}>{v}</Tag>
-      ),
+      render: (v: number) => <Tag color={v > 0 ? "green" : "red"}>{v}</Tag>,
     },
   ];
 
@@ -76,7 +99,8 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
   const arrivalColumns: TableProps<WarehouseArrival>["columns"] = [
     {
       title: "№",
-      render: (_: unknown, __: unknown, i: number) => (arrivalPage - 1) * pageSize + i + 1,
+      render: (_: unknown, __: unknown, i: number) =>
+        (arrivalPage - 1) * pageSize + i + 1,
       width: 60,
     },
     {
@@ -86,7 +110,8 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     },
     {
       title: t("product"),
-      render: (_, r) => lang === "ru" ? r.product?.name_ru : r.product?.name_tm,
+      render: (_, r) =>
+        lang === "ru" ? r.product?.name_ru : r.product?.name_tm,
     },
     {
       title: t("quantity"),
@@ -95,12 +120,12 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     {
       title: t("unit_price"),
       dataIndex: "unitPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("total_price"),
       dataIndex: "totalPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: warehouseType === "IMPORT" ? t("supplier") : t("client"),
@@ -117,7 +142,12 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     },
     {
       title: t("actions"),
-      render: (_, r) => <DeleteModal id={r.id} onDelete={async (id) => await deleteArrival(Number(id)).unwrap()} />,
+      render: (_, r) => (
+        <DeleteModal
+          id={r.id}
+          onDelete={async (id) => await deleteArrival(Number(id)).unwrap()}
+        />
+      ),
       width: 80,
     },
   ];
@@ -126,7 +156,8 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
   const dispatchColumns: TableProps<DispatchGroup>["columns"] = [
     {
       title: "№",
-      render: (_: unknown, __: unknown, i: number) => (dispatchPage - 1) * pageSize + i + 1,
+      render: (_: unknown, __: unknown, i: number) =>
+        (dispatchPage - 1) * pageSize + i + 1,
       width: 60,
     },
     {
@@ -153,7 +184,7 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     {
       title: t("total_price"),
       dataIndex: "totalSellPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("actions"),
@@ -177,7 +208,8 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     },
     {
       title: t("product"),
-      render: (_, r) => lang === "ru" ? r.product?.name_ru : r.product?.name_tm,
+      render: (_, r) =>
+        lang === "ru" ? r.product?.name_ru : r.product?.name_tm,
     },
     {
       title: t("quantity"),
@@ -186,12 +218,12 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     {
       title: t("sell_price"),
       dataIndex: "sellPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("total_price"),
       dataIndex: "totalSellPrice",
-      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+      render: (v: number) => `${Number(v).toFixed(2)} $`,
     },
     {
       title: t("note"),
@@ -200,7 +232,12 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     },
     {
       title: t("actions"),
-      render: (_, r) => <DeleteModal id={r.id} onDelete={async (id) => await deleteDispatch(Number(id)).unwrap()} />,
+      render: (_, r) => (
+        <DeleteModal
+          id={r.id}
+          onDelete={async (id) => await deleteDispatch(Number(id)).unwrap()}
+        />
+      ),
       width: 80,
     },
   ];

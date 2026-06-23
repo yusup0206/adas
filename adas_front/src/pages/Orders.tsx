@@ -86,27 +86,38 @@ const Orders = () => {
       title: t("totalPrice"),
       dataIndex: "totalPrice",
       key: "totalPrice",
-      render: (price: number) => `${Number(price).toFixed(2)} TMT`,
+      render: (price: number) => `${Number(price).toFixed(2)} $`,
     },
     {
       title: t("additional_expenses"),
       dataIndex: "expenses",
       key: "expenses",
       render: (expenses: any) => {
-        if (!expenses) return "0.00 TMT";
-        
+        if (!expenses) return "0.00 $";
+
         const expenseFields = [
-          "tax", "director", "customs", "transportation", "workers", 
-          "stockExchange", "forensics", "bank", "textileMinistry", 
-          "export", "minusConjugation", "additionalExpenses"
+          "tax",
+          "director",
+          "customs",
+          "transportation",
+          "workers",
+          "stockExchange",
+          "forensics",
+          "bank",
+          "textileMinistry",
+          "export",
+          "minusConjugation",
+          "additionalExpenses",
         ];
-        
+
         const total = expenseFields.reduce((sum, key) => {
           const val = Number(expenses[key] ?? 0);
           return sum + (isNaN(val) ? 0 : val);
         }, 0);
-        
-        return <span className="text-blue-600 font-medium">{`${total.toFixed(2)} TMT`}</span>;
+
+        return (
+          <span className="text-blue-600 font-medium">{`${total.toFixed(2)} $`}</span>
+        );
       },
     },
 

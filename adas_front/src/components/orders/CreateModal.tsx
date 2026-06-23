@@ -213,7 +213,7 @@ const CreateModal = () => {
 
           <div className="flex justify-between items-center mt-4 border-t pt-4">
             <div className="text-lg font-bold">
-              {t("total")}: {totalPrice.toFixed(2)} TMT
+              {t("total")}: {totalPrice.toFixed(2)} $
             </div>
             <Space>
               <Button size="large" onClick={() => setOpenModal(false)}>

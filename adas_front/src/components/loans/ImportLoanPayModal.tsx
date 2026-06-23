@@ -120,13 +120,13 @@ const ImportLoanPayModal = ({ loanGroup, open, onClose }: Props) => {
         <div className="bg-gray-50 rounded-lg p-3">
           <p className="text-gray-500 mb-1">{t("total_price")}</p>
           <p className="font-semibold">
-            {Number(loanGroup.totalAmount).toFixed(2)} TMT
+            {Number(loanGroup.totalAmount).toFixed(2)} $
           </p>
         </div>
         <div className="bg-red-50 rounded-lg p-3">
           <p className="text-gray-500 mb-1">{t("current_debt")}</p>
           <p className="font-semibold text-red-500">
-            {currentDebt.toFixed(2)} TMT
+            {currentDebt.toFixed(2)} $
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ const ImportLoanPayModal = ({ loanGroup, open, onClose }: Props) => {
                       max={currentDebt}
                       step={0.01}
                       placeholder={t("enter_amount")}
-                      addonAfter="TMT"
+                      addonAfter="$"
                     />
                   </Form.Item>
                 </div>
