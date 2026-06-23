@@ -117,13 +117,13 @@ const ImportLoanPayModal = ({ loanGroup, open, onClose }: Props) => {
     >
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-md p-3">
           <p className="text-gray-500 mb-1">{t("total_price")}</p>
           <p className="font-semibold">
             {Number(loanGroup.totalAmount).toFixed(2)} $
           </p>
         </div>
-        <div className="bg-red-50 rounded-lg p-3">
+        <div className="bg-red-50 rounded-md p-3">
           <p className="text-gray-500 mb-1">{t("current_debt")}</p>
           <p className="font-semibold text-red-500">
             {currentDebt.toFixed(2)} $

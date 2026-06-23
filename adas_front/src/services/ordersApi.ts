@@ -6,6 +6,8 @@ import type {
 } from "@/interfaces/orders.interface";
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { baseQueryWithReauth } from "./baseQueryWithReauth";
+import { incomeApi } from "./incomeApi";
+import { loansApi } from "./loansApi";
 
 export const ordersApi = createApi({
   reducerPath: "ordersApi",
@@ -40,6 +42,10 @@ export const ordersApi = createApi({
         body,
       }),
       invalidatesTags: ["Order"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(["Income"]));
+      },
     }),
     recordPayment: builder.mutation<any, { orderId: number; amount: number; payDate?: string }>({
       query: ({ orderId, amount, payDate }) => ({
@@ -48,6 +54,10 @@ export const ordersApi = createApi({
         body: { amount, payDate },
       }),
       invalidatesTags: ["Order", "Supplier"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(["Income"]));
+      },
     }),
     updateOrderStatus: builder.mutation<any, { orderId: number; status: string }>({
       query: ({ orderId, status }) => ({
@@ -63,6 +73,11 @@ export const ordersApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: ["Order", "Supplier"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(["Income"]));
+        dispatch(loansApi.util.invalidateTags(["Loan"]));
+      },
     }),
     updateOrder: builder.mutation<any, { id: number; body: Partial<OrderValues> }>({
       query: ({ id, body }) => ({
@@ -71,6 +86,10 @@ export const ordersApi = createApi({
         body,
       }),
       invalidatesTags: ["Order"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(["Income"]));
+      },
     }),
     upsertOrderExpenses: builder.mutation<any, { id: number; body: Record<string, number | null> }>({
       query: ({ id, body }) => ({
@@ -79,6 +98,10 @@ export const ordersApi = createApi({
         body,
       }),
       invalidatesTags: ["Order"],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(["Income"]));
+      },
     }),
     getSupplierBalance: builder.query<any, number>({
       query: (supplierId) => `/suppliers/${supplierId}/balance`,
@@ -110,4 +133,3 @@ export const {
   useGetSupplierBalanceQuery,
   useGetDebtSummaryQuery,
 } = ordersApi;
-

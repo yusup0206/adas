@@ -39,7 +39,12 @@ export const sidebarData = {
       icon: <FaWarehouse className="size-5 min-w-5" />,
       permission: "MANAGE_WAREHOUSE",
     },
-
+    {
+      labelKey: "users",
+      url: "/users",
+      icon: <FaUser className="size-5 min-w-5" />,
+      permission: "MANAGE_USERS",
+    },
     {
       labelKey: "settings",
       icon: <FaGear className="size-5 min-w-5" />,
@@ -68,12 +73,7 @@ export const sidebarData = {
           icon: <FaBoxArchive className="size-5 min-w-5" />,
           permission: "MANAGE_PRODUCTS",
         },
-        {
-          labelKey: "users",
-          url: "/users",
-          icon: <FaUser className="size-5 min-w-5" />,
-          permission: "MANAGE_USERS",
-        },
+
         {
           labelKey: "roles",
           url: "/roles",

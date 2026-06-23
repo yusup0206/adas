@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from './baseQueryWithReauth';
 import type { Loan, LoanSummary, LoanGroupResponse, LoanType } from '@/interfaces/loans.interface';
+import { incomeApi } from './incomeApi';
 
 export const loansApi = createApi({
   reducerPath: 'loansApi',
@@ -35,6 +36,11 @@ export const loansApi = createApi({
         body: { amount, payDate },
       }),
       invalidatesTags: ['Loan'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        // Loan repayment affects income summary
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
     payLoanByProduct: builder.mutation<Loan, { loanId: number; items: { productId: number; quantity: number; unitPrice: number }[]; payDate?: string }>({
       query: ({ loanId, items, payDate }) => ({
@@ -43,6 +49,10 @@ export const loansApi = createApi({
         body: { items, payDate },
       }),
       invalidatesTags: ['Loan'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
     payLoanGroupByMoney: builder.mutation<Loan[], { groupId: number; amount: number; payDate?: string }>({
       query: ({ groupId, amount, payDate }) => ({
@@ -51,6 +61,10 @@ export const loansApi = createApi({
         body: { amount, payDate },
       }),
       invalidatesTags: ['Loan'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
     payLoanGroupByProduct: builder.mutation<Loan[], { groupId: number; items: { productId: number; quantity: number; unitPrice: number }[]; payDate?: string }>({
       query: ({ groupId, items, payDate }) => ({
@@ -59,6 +73,10 @@ export const loansApi = createApi({
         body: { items, payDate },
       }),
       invalidatesTags: ['Loan'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
   }),
 });

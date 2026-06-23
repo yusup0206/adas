@@ -8,6 +8,8 @@ import type {
   CreateDispatchValues,
   WarehouseType,
 } from '@/interfaces/warehouses.interface';
+import { loansApi } from './loansApi';
+import { incomeApi } from './incomeApi';
 
 export const warehouseApi = createApi({
   reducerPath: 'warehouseApi',
@@ -26,10 +28,19 @@ export const warehouseApi = createApi({
     createArrival: builder.mutation<void, CreateArrivalValues>({
       query: (body) => ({ url: '/warehouse/arrivals', method: 'POST', body }),
       invalidatesTags: ['WArrival', 'WStock'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        // Arrivals may affect income summary
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
     deleteArrival: builder.mutation<void, number>({
       query: (id) => ({ url: `/warehouse/arrivals/${id}`, method: 'DELETE' }),
       invalidatesTags: ['WArrival', 'WStock'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
     getDispatches: builder.query<DispatchGroupResponse, { type: WarehouseType; page?: number; pageSize?: number }>({
       query: ({ type, page = 1, pageSize = 10 }) =>
@@ -39,10 +50,22 @@ export const warehouseApi = createApi({
     createDispatch: builder.mutation<void, CreateDispatchValues>({
       query: (body) => ({ url: '/warehouse/dispatches', method: 'POST', body }),
       invalidatesTags: ['WDispatch', 'WStock', 'Order'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        // Dispatches can create loans and affect income
+        dispatch(loansApi.util.invalidateTags(['Loan']));
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
     deleteDispatch: builder.mutation<void, number>({
       query: (id) => ({ url: `/warehouse/dispatches/${id}`, method: 'DELETE' }),
       invalidatesTags: ['WDispatch', 'WStock'],
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        await queryFulfilled;
+        // Deleting a dispatch may remove loans and affect income
+        dispatch(loansApi.util.invalidateTags(['Loan']));
+        dispatch(incomeApi.util.invalidateTags(['Income']));
+      },
     }),
   }),
 });

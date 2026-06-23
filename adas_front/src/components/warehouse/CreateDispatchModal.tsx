@@ -54,7 +54,8 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
     stock?.forEach((s) =>
       map.set(
         s.productId,
-        (i18n.language === "ru" ? s.product?.name_ru : s.product?.name_tm) ?? "",
+        (i18n.language === "ru" ? s.product?.name_ru : s.product?.name_tm) ??
+          "",
       ),
     );
     return map;
@@ -142,6 +143,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
         size="large"
         onClick={handleOpen}
         className="max-w-full md:max-w-fit w-full"
+        type="primary"
       >
         {t("dispatch_product")}
       </Button>

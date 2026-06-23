@@ -40,7 +40,7 @@ const StatCard = ({
   bg: string;
   sub?: string;
 }) => (
-  <div className="flex items-center gap-4 rounded-xl border border-borderColor bg-bgColor p-5 shadow-sm flex-1 min-w-0">
+  <div className="flex items-center gap-4 rounded-md border border-borderColor bg-white p-5 active:shadow-md md:hover:shadow-md flex-1 min-w-0">
     <div
       className={`flex items-center justify-center rounded-full p-3 ${bg} shrink-0`}
     >
@@ -93,9 +93,7 @@ const Income = () => {
         r.id === 0 ? (
           "—"
         ) : (
-          <span className="text-gray-600">
-            {dayjs(d).format("DD.MM.YYYY")}
-          </span>
+          <span className="text-gray-600">{dayjs(d).format("DD.MM.YYYY")}</span>
         ),
     },
     {
@@ -309,9 +307,7 @@ const Income = () => {
       dataIndex: "date",
       key: "date",
       render: (d: string) => (
-        <span className="text-gray-600">
-          {dayjs(d).format("DD.MM.YYYY")}
-        </span>
+        <span className="text-gray-600">{dayjs(d).format("DD.MM.YYYY")}</span>
       ),
     },
     {
@@ -396,19 +392,13 @@ const Income = () => {
       dataIndex: "date",
       key: "date",
       render: (d: string) => (
-        <span className="text-gray-600">
-          {dayjs(d).format("DD.MM.YYYY")}
-        </span>
+        <span className="text-gray-600">{dayjs(d).format("DD.MM.YYYY")}</span>
       ),
     },
     {
       title: t("order"),
       key: "order",
-      render: (_, r) => (
-        <Tag color="default">
-          #{r.orderId} — {r.orderName}
-        </Tag>
-      ),
+      render: (_, r) => <Tag color="default">{r.orderName}</Tag>,
     },
     {
       title: t("product"),

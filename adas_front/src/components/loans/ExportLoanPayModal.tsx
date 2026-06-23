@@ -82,13 +82,13 @@ const ExportLoanPayModal = ({ loanGroup, open, onClose }: Props) => {
         <div className="space-y-4 pt-2">
           {/* Summary */}
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="bg-gray-50 rounded-lg p-3">
+            <div className="bg-gray-50 rounded-md p-3">
               <p className="text-gray-500 mb-1">{t("total_price")}</p>
               <p className="font-semibold">
                 {Number(loanGroup.totalAmount).toFixed(2)} $
               </p>
             </div>
-            <div className="bg-green-50 rounded-lg p-3">
+            <div className="bg-green-50 rounded-md p-3">
               <p className="text-gray-500 mb-1">{t("paid_amount")}</p>
               <p className="font-semibold text-green-600">
                 {Number(loanGroup.paidAmount ?? 0).toFixed(2)} $
@@ -98,7 +98,7 @@ const ExportLoanPayModal = ({ loanGroup, open, onClose }: Props) => {
 
           <Divider className="my-3" />
 
-          <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-lg">
+          <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-md">
             <div className="flex justify-between items-center">
               <span className="font-semibold">{t("current_debt")}:</span>
               <span className="text-red-500 font-bold text-base">

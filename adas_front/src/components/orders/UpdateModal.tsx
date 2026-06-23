@@ -111,15 +111,15 @@ const LoansTab = ({ loans }: { loans?: LinkedLoan[] }) => {
       />
       <Divider />
       <div className="grid grid-cols-3 gap-4 text-center">
-        <div className="bg-gray-50 rounded-lg p-3">
+        <div className="bg-gray-50 rounded-md p-3">
           <p className="text-xs text-gray-500 mb-1">{t("total_price")}</p>
           <p className="font-bold text-gray-800">{totalLoan.toFixed(2)} $</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-3">
+        <div className="bg-green-50 rounded-md p-3">
           <p className="text-xs text-gray-500 mb-1">{t("paid_amount")}</p>
           <p className="font-bold text-green-600">{totalPaid.toFixed(2)} $</p>
         </div>
-        <div className="bg-red-50 rounded-lg p-3">
+        <div className="bg-red-50 rounded-md p-3">
           <p className="text-xs text-gray-500 mb-1">{t("current_debt")}</p>
           <p className="font-bold text-red-500">{totalDebt.toFixed(2)} $</p>
         </div>

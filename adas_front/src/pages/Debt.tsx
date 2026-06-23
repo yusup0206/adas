@@ -50,7 +50,7 @@ const StatCard = ({
   color: string;
   bg: string;
 }) => (
-  <div className="flex items-center gap-4 rounded-xl border border-borderColor bg-bgColor p-5 shadow-sm flex-1 min-w-0">
+  <div className="flex items-center gap-4 rounded-md border border-borderColor bg-bgColor p-5 active:shadow-md md:hover:shadow-md flex-1 min-w-0">
     <div
       className={`flex items-center justify-center rounded-full p-3 ${bg} shrink-0`}
     >
@@ -123,13 +123,13 @@ const PayModal = ({
     >
       <div className="space-y-4 pt-2">
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div className="bg-gray-50 rounded-md p-3">
             <p className="text-gray-500 mb-1">{t("total_price")}</p>
             <p className="font-semibold">
               {Number(record.totalPrice).toFixed(2)} $
             </p>
           </div>
-          <div className="bg-green-50 rounded-lg p-3">
+          <div className="bg-green-50 rounded-md p-3">
             <p className="text-gray-500 mb-1">{t("paid_amount")}</p>
             <p className="font-semibold text-green-600">
               {Number(record.paidAmount || 0).toFixed(2)} $
@@ -139,7 +139,7 @@ const PayModal = ({
 
         <Divider className="my-3" />
 
-        <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-lg">
+        <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-md">
           <div className="flex justify-between items-center">
             <span className="font-semibold">{t("current_debt")}:</span>
             <span className="text-red-500 font-bold text-base">
@@ -376,7 +376,7 @@ const SupplierDebtPanel = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-md border border-gray-100 shadow-sm overflow-x-auto">
         <Select
           className="w-48"
           value={statusFilter}
@@ -659,7 +659,7 @@ const ImportLoansPanel = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-md border border-gray-100 shadow-sm overflow-x-auto">
         <Select
           className="w-48"
           value={statusFilter}
@@ -960,7 +960,7 @@ const ExportLoansPanel = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-md border border-gray-100 shadow-sm overflow-x-auto">
         <Select
           className="w-48"
           value={statusFilter}

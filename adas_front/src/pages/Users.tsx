@@ -1,14 +1,4 @@
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  Select,
-  Space,
-  Popconfirm,
-  message,
-} from "antd";
+import { Table, Button, Modal, Form, Input, Select, Space, App } from "antd";
 import {
   useGetUsersQuery,
   useCreateUserMutation,
@@ -21,8 +11,11 @@ import { useTranslation } from "react-i18next";
 import Header from "@/components/shared/header/Header";
 import Section from "@/components/shared/Section";
 import Box from "@/components/shared/Box";
+import { RiPencilFill } from "react-icons/ri";
+import DeleteModal from "@/components/shared/DeleteModal";
 
 const Users = () => {
+  const { message } = App.useApp();
   const { data: users, isLoading } = useGetUsersQuery({});
   const { data: rolesData } = useGetRolesQuery({});
   const [createUser] = useCreateUserMutation();
@@ -34,7 +27,7 @@ const Users = () => {
   const [editingUser, setEditingUser] = useState<any>(null);
   const [form] = Form.useForm();
 
-  const handleOpenModal = (user = null) => {
+  const handleOpenModal = (user: any | null = null) => {
     setEditingUser(user);
     if (user) {
       form.setFieldsValue({
@@ -69,13 +62,8 @@ const Users = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteUser(id).unwrap();
-      message.success("User deleted successfully");
-    } catch (error: any) {
-      message.error(error?.data?.message || "Error deleting user");
-    }
+  const handleDelete = async (id: number | string) => {
+    await deleteUser(id as number).unwrap();
   };
 
   const columns = [
@@ -87,13 +75,12 @@ const Users = () => {
       key: "actions",
       render: (_: any, record: any) => (
         <Space>
-          <Button onClick={() => handleOpenModal(record)}>{t("edit")}</Button>
-          <Popconfirm
-            title={t("delete_user_confirm")}
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button danger>{t("delete")}</Button>
-          </Popconfirm>
+          <RiPencilFill
+            size={20}
+            onClick={() => handleOpenModal(record)}
+            className="size-5 cursor-pointer hover:text-primary active:text-primary transition-all"
+          />
+          <DeleteModal id={record.id} onDelete={handleDelete} />
         </Space>
       ),
     },
@@ -126,6 +113,7 @@ const Users = () => {
             open={isModalVisible}
             onOk={handleSubmit}
             onCancel={handleCloseModal}
+            centered
           >
             <Form form={form} layout="vertical">
               <Form.Item

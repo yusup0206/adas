@@ -262,9 +262,9 @@ const WarehousePanel = ({
       label: t("arrivals"),
       children: (
         <>
-          <div className="flex justify-end mb-4">
+          {/* <div className="flex justify-end mb-4">
             <CreateArrivalModal warehouseType={warehouseType} />
-          </div>
+          </div> */}
           <Table
             loading={arrivalsLoading}
             columns={arrivalColumns}

@@ -1,10 +1,14 @@
 import i18n from "@/i18n";
 import { Button, Modal } from "antd";
-import { useState } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MdLanguage } from "react-icons/md";
 
-const LangModal = () => {
+interface LangModalProps {
+  trigger?: React.ReactNode;
+}
+
+const LangModal = ({ trigger }: LangModalProps) => {
   const { t } = useTranslation();
 
   const languageOptions = [
@@ -20,14 +24,29 @@ const LangModal = () => {
     setOpenLangModal(false);
   };
 
+  const triggerElement = trigger ? (
+    React.cloneElement(trigger as React.ReactElement, {
+      onClick: (e: React.MouseEvent) => {
+        e.stopPropagation();
+        // Call original onClick if it exists on trigger
+        if ((trigger as any).props?.onClick) {
+          (trigger as any).props.onClick(e);
+        }
+        setOpenLangModal(true);
+      },
+    })
+  ) : (
+    <button
+      onClick={() => setOpenLangModal(true)}
+      className="text-textColor hover:text-primary active:text-primary transition-all cursor-pointer"
+    >
+      <MdLanguage className="size-6" />
+    </button>
+  );
+
   return (
     <>
-      <button
-        onClick={() => setOpenLangModal(true)}
-        className="text-textColor hover:text-primary active:text-primary transition-all cursor-pointer"
-      >
-        <MdLanguage className="size-6" />
-      </button>
+      {triggerElement}
 
       <Modal
         title={t("select_language")}
@@ -35,6 +54,7 @@ const LangModal = () => {
         onCancel={() => setOpenLangModal(false)}
         footer={null}
         centered
+        destroyOnClose
       >
         <div className="flex flex-col gap-3 pt-4">
           {languageOptions.map((option) => (

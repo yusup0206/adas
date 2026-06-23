@@ -1,13 +1,16 @@
-import { IoMenu, IoLogOut } from "react-icons/io5";
+import { IoMenu, IoLogOut, IoChevronDown } from "react-icons/io5";
+import { MdLanguage } from "react-icons/md";
 import LangModal from "./LangModal";
 import { useState } from "react";
 import Sidebar from "../Sidebar";
-import { Button } from "antd";
+import { Button, Dropdown } from "antd";
+import type { MenuProps } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/store/slices/authSlice";
 import { useLogoutMutation } from "@/services/authApi";
 import type { RootState } from "@/store";
+import { useTranslation } from "react-i18next";
 
 interface MainHeaderProps {
   title: string;
@@ -19,6 +22,7 @@ const Header = ({ title }: MainHeaderProps) => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const [logoutApi] = useLogoutMutation();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     try {
@@ -30,6 +34,49 @@ const Header = ({ title }: MainHeaderProps) => {
     localStorage.removeItem("refreshToken");
     navigate("/login");
   };
+
+  const menuItems: MenuProps["items"] = [
+    {
+      key: "profile-header",
+      label: (
+        <div className="px-2 py-1.5 border-b border-borderColor max-w-[180px]">
+          <div className="font-semibold text-textColor truncate">
+            {user?.username || "User"}
+          </div>
+          <div className="text-xs text-textColor/60 truncate mt-0.5 capitalize">
+            {user?.role || t("user")}
+          </div>
+        </div>
+      ),
+      type: "group",
+    },
+    {
+      key: "lang",
+      label: (
+        <LangModal
+          trigger={
+            <div className="flex items-center gap-2 py-1 text-textColor">
+              <MdLanguage className="text-lg text-textColor/75" />
+              <span>{t("select_language")}</span>
+            </div>
+          }
+        />
+      ),
+    },
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      danger: true,
+      label: (
+        <div onClick={handleLogout} className="flex items-center gap-2 py-1">
+          <IoLogOut className="text-lg" />
+          <span>{t("logout")}</span>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="sticky top-0 z-40 bg-bgColor w-full flex items-center justify-between gap-4 p-6 border-b border-borderColor">
@@ -47,24 +94,27 @@ const Header = ({ title }: MainHeaderProps) => {
         </h1>
       </div>
       <div className="flex items-center gap-4">
-        <button
-          onClick={handleLogout}
-          className="text-textColor hover:text-red-500 active:text-red-500 transition-all cursor-pointer ml-2"
-          title="Logout"
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={["click"]}
+          placement="bottomRight"
+          overlayClassName="min-w-[160px]"
         >
-          <IoLogOut className="size-6" />
-        </button>
-        <LangModal />
-        <div className="flex items-center gap-4">
-          {user && (
-            <span className="text-textColor font-medium hidden sm:block">
-              {user.username}
-            </span>
-          )}
-          <div className="size-10 overflow-hidden rounded-full bg-gray-400 flex items-center justify-center text-white font-bold">
-            {user?.username?.[0]?.toUpperCase() || "U"}
+          <div className="flex items-center gap-2.5 cursor-pointer group hover:bg-gray-100 dark:hover:bg-white/5 px-2.5 py-1.5 rounded-full transition-all duration-300">
+            <div className="relative">
+              <div className="size-9 overflow-hidden rounded-full bg-linear-to-tr from-primary to-blue-500 flex items-center justify-center text-white font-bold shadow-sm group-hover:scale-105 transition-transform duration-300">
+                {user?.username?.[0]?.toUpperCase() || "U"}
+              </div>
+              {/* <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-bgColor" /> */}
+            </div>
+            {user && (
+              <span className="text-textColor font-medium hidden sm:block select-none group-hover:text-primary transition-colors duration-300">
+                {user.username}
+              </span>
+            )}
+            <IoChevronDown className="text-textColor/50 group-hover:text-textColor transition-colors duration-300 size-3.5 hidden sm:block" />
           </div>
-        </div>
+        </Dropdown>
       </div>
 
       <div
