@@ -117,6 +117,7 @@ const CreateModal = () => {
                 }))}
                 showSearch
                 optionFilterProp="label"
+                allowClear
               />
             </Form.Item>
           </div>
@@ -129,7 +130,7 @@ const CreateModal = () => {
                 {fields.map(({ key, name, ...restField }) => (
                   <div
                     key={key}
-                    className="w-full flex flex-col md:flex-row items-start gap-4"
+                    className="w-full grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
                     <Form.Item
                       {...restField}

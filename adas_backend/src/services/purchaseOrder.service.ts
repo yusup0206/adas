@@ -129,8 +129,8 @@ export class PurchaseOrderService {
     });
   }
 
-  async getAllPurchaseOrders(filters: { search?: string; page?: number; pageSize?: number; status?: string; isPaid?: boolean } = {}) {
-    const { search, page = 1, pageSize = 10, status, isPaid } = filters;
+  async getAllPurchaseOrders(filters: { search?: string; page?: number; pageSize?: number; status?: string; isPaid?: boolean; dateFrom?: string; dateTo?: string } = {}) {
+    const { search, page = 1, pageSize = 10, status, isPaid, dateFrom, dateTo } = filters;
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
@@ -138,7 +138,15 @@ export class PurchaseOrderService {
       ...(status && status !== 'ALL' ? { status: status as OrderStatus } : {}),
       ...(search ? {
         orderName: { contains: search }
-      } : {})
+      } : {}),
+      ...(dateFrom || dateTo
+        ? {
+            createdAt: {
+              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+              ...(dateTo ? { lte: new Date(`${dateTo}T23:59:59.999Z`) } : {}),
+            },
+          }
+        : {}),
     };
 
     const [orders, total] = await Promise.all([
@@ -146,6 +154,11 @@ export class PurchaseOrderService {
         where,
         include: {
           supplier: true,
+          expenses: true,
+          loans: {
+            include: { client: true },
+            orderBy: { createdAt: 'desc' },
+          },
           items: {
             include: {
               product: true,
@@ -183,10 +196,29 @@ export class PurchaseOrderService {
     });
   }
 
-  async getDebtSummary() {
+  async getDebtSummary(filters: { dateFrom?: string; dateTo?: string } = {}) {
+    const { dateFrom, dateTo } = filters;
+    const where: Prisma.PurchaseOrderWhereInput = {
+      ...(dateFrom || dateTo
+        ? {
+            createdAt: {
+              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+              ...(dateTo ? { lte: new Date(`${dateTo}T23:59:59.999Z`) } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const conditions: Prisma.Sql[] = [Prisma.sql`totalPrice > paidAmount`];
+    if (dateFrom) conditions.push(Prisma.sql`createdAt >= ${new Date(dateFrom)}`);
+    if (dateTo) conditions.push(Prisma.sql`createdAt <= ${new Date(`${dateTo}T23:59:59.999Z`)}`);
+
+    const whereClause = Prisma.join(conditions, ' AND ');
+
     // Use a single aggregate query instead of loading all rows into JS memory
     const [aggregate, unpaidCount] = await Promise.all([
       prisma.purchaseOrder.aggregate({
+        where,
         _sum: {
           totalPrice: true,
           paidAmount: true,
@@ -196,7 +228,7 @@ export class PurchaseOrderService {
       prisma.$queryRaw<[{ count: bigint }]>`
         SELECT COUNT(*) as count
         FROM PurchaseOrder
-        WHERE totalPrice > paidAmount
+        WHERE ${whereClause}
       `,
     ]);
 
@@ -209,6 +241,26 @@ export class PurchaseOrderService {
       totalPaid,
       unpaidOrdersCount: Number(unpaidCount[0]?.count ?? 0),
     };
+  }
+  async upsertExpenses(orderId: number, data: {
+    tax?: number | null;
+    director?: number | null;
+    customs?: number | null;
+    transportation?: number | null;
+    workers?: number | null;
+    stockExchange?: number | null;
+    forensics?: number | null;
+    bank?: number | null;
+    textileMinistry?: number | null;
+    export?: number | null;
+    minusConjugation?: number | null;
+    additionalExpenses?: number | null;
+  }) {
+    return await prisma.purchaseOrderExpenses.upsert({
+      where: { purchaseOrderId: orderId },
+      update: data,
+      create: { purchaseOrderId: orderId, ...data },
+    });
   }
 }
 

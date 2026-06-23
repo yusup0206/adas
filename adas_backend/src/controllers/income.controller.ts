@@ -4,48 +4,235 @@ import prisma from '../utils/prismaClient';
 export class IncomeController {
   async getIncomeSummary(req: Request, res: Response) {
     try {
-      // ── Run both heavy queries in PARALLEL ─────────────────────────────────
-      const [dispatches, orderItems] = await Promise.all([
+      // ── Run queries in PARALLEL ───────────────────────────────────────────
+      const [orders, allDispatches, allLoans, allExportArrivals] = await Promise.all([
+        prisma.purchaseOrder.findMany({
+          include: {
+            supplier: { select: { name_tm: true, name_ru: true } },
+            items: {
+              include: {
+                product: { select: { name_tm: true, name_ru: true } },
+              },
+            },
+            expenses: true,
+          },
+          orderBy: { orderDate: 'desc' },
+        }),
         prisma.warehouseDispatch.findMany({
-          select: {
-            id: true,
-            dispatchDate: true,
-            productId: true,
+          include: {
             product: { select: { name_tm: true, name_ru: true } },
             client: { select: { name_tm: true, name_ru: true } },
-            quantity: true,
-            sellPrice: true,
-            totalSellPrice: true,
-            warehouseType: true,
-            note: true,
           },
           orderBy: { dispatchDate: 'desc' },
         }),
-        prisma.purchaseOrderItem.findMany({
-          select: {
-            id: true,
-            purchaseOrderId: true,
-            productId: true,
-            product: { select: { name_tm: true, name_ru: true } },
-            quantity: true,
-            unitPrice: true,
-            totalPrice: true,
-            purchaseOrder: {
-              select: {
-                orderDate: true,
-                supplier: { select: { name_tm: true, name_ru: true } },
-              },
-            },
+        prisma.loan.findMany({
+          include: {
+            client: { select: { name_tm: true, name_ru: true } },
+            purchaseOrder: { select: { orderName: true } },
           },
-          orderBy: { purchaseOrder: { orderDate: 'desc' } },
+          orderBy: { lastPayDate: 'desc' },
+        }),
+        prisma.warehouseArrival.findMany({
+          where: { warehouseType: 'EXPORT' },
         }),
       ]);
 
-      // ── Aggregate totals ───────────────────────────────────────────────────
-      let totalRevenue = 0;
-      let totalCost = 0;
+      // Map loan IDs that are associated with dispatches to determine if cash/loan
+      const loanDispatchIds = new Set(allLoans.map((l) => l.dispatchId).filter(Boolean));
 
-      // ── Per-product map ────────────────────────────────────────────────────
+      // ── Calculate Order-Centric Summary ───────────────────────────────────
+      const ordersSummary = orders.map((order) => {
+        const itemsCost = order.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+
+        // Additional expenses
+        const expenses = order.expenses;
+        let expensesTotal = 0;
+        const expensesBreakdown: Record<string, number> = {};
+        if (expenses) {
+          const expenseFields = [
+            'tax', 'director', 'customs', 'transportation', 'workers',
+            'stockExchange', 'forensics', 'bank', 'textileMinistry',
+            'export', 'minusConjugation', 'additionalExpenses',
+          ];
+          expenseFields.forEach((key) => {
+            const val = Number((expenses as any)[key] ?? 0);
+            expensesBreakdown[key] = isNaN(val) ? 0 : val;
+            expensesTotal += isNaN(val) ? 0 : val;
+          });
+        }
+
+        const totalCost = itemsCost + expensesTotal;
+
+        // Dispatches linked to this order
+        const orderDispatches = allDispatches.filter((d) => d.purchaseOrderId === order.id);
+
+        // Direct cash sales from IMPORT (where warehouseType is IMPORT and it is not a loan dispatch)
+        const importDirectCashSales = orderDispatches
+          .filter((d) => d.warehouseType === 'IMPORT' && !loanDispatchIds.has(d.id))
+          .reduce((sum, d) => sum + Number(d.totalSellPrice), 0);
+
+        // Barter arrivals for this order
+        const orderBarterArrivals = allExportArrivals.filter((a) => a.purchaseOrderId === order.id);
+        const barterReceivedTotal = orderBarterArrivals.reduce((sum, a) => sum + Number(a.totalPrice), 0);
+
+        // Loans for this order
+        const orderLoans = allLoans.filter((l) => l.purchaseOrderId === order.id);
+        const importLoans = orderLoans.filter((l) => l.type === 'IMPORT');
+        const importLoansPaidTotal = importLoans.reduce((sum, l) => sum + Number(l.paidAmount), 0);
+
+        // Cash repayments of IMPORT loans (total paid amount minus barter portion)
+        const importLoanCashRepayments = Math.max(0, importLoansPaidTotal - barterReceivedTotal);
+
+        // EXPORT sales linked to this order (selling barter products)
+        const exportSales = orderDispatches
+          .filter((d) => d.warehouseType === 'EXPORT')
+          .reduce((sum, d) => sum + Number(d.totalSellPrice), 0);
+
+        const totalRevenue = importDirectCashSales + importLoanCashRepayments + exportSales;
+        const totalProfit = totalRevenue - totalCost;
+
+        return {
+          id: order.id,
+          orderName: order.orderName,
+          orderDate: order.orderDate,
+          supplier: order.supplier
+            ? { tm: order.supplier.name_tm, ru: order.supplier.name_ru }
+            : null,
+          itemsCost,
+          expensesTotal,
+          expensesBreakdown,
+          totalCost,
+          importDirectCashSales,
+          importLoanCashRepayments,
+          barterReceivedTotal,
+          exportSales,
+          totalRevenue,
+          totalProfit,
+          status: order.status,
+        };
+      });
+
+      // ── Calculate Direct / Unlinked Transactions ─────────────────────────
+      const unlinkedDispatches = allDispatches.filter((d) => d.purchaseOrderId === null);
+      const unlinkedLoans = allLoans.filter((l) => l.purchaseOrderId === null);
+
+      const unlinkedImportDirectCashSales = unlinkedDispatches
+        .filter((d) => d.warehouseType === 'IMPORT' && !loanDispatchIds.has(d.id))
+        .reduce((sum, d) => sum + Number(d.totalSellPrice), 0);
+
+      const unlinkedExportArrivals = allExportArrivals.filter((a) => a.purchaseOrderId === null);
+      const unlinkedBarterReceivedTotal = unlinkedExportArrivals.reduce((sum, a) => sum + Number(a.totalPrice), 0);
+
+      const unlinkedImportLoans = unlinkedLoans.filter((l) => l.type === 'IMPORT');
+      const unlinkedImportLoansPaidTotal = unlinkedImportLoans.reduce((sum, l) => sum + Number(l.paidAmount), 0);
+      const unlinkedImportLoanCashRepayments = Math.max(0, unlinkedImportLoansPaidTotal - unlinkedBarterReceivedTotal);
+
+      const unlinkedExportSales = unlinkedDispatches
+        .filter((d) => d.warehouseType === 'EXPORT')
+        .reduce((sum, d) => sum + Number(d.totalSellPrice), 0);
+
+      const unlinkedRevenue =
+        unlinkedImportDirectCashSales + unlinkedImportLoanCashRepayments + unlinkedExportSales;
+
+      const ordersList = [...ordersSummary];
+      if (unlinkedRevenue > 0) {
+        ordersList.push({
+          id: 0,
+          orderName: 'Direct / Unlinked Transactions',
+          orderDate: new Date(),
+          supplier: null,
+          itemsCost: 0,
+          expensesTotal: 0,
+          expensesBreakdown: {},
+          totalCost: 0,
+          importDirectCashSales: unlinkedImportDirectCashSales,
+          importLoanCashRepayments: unlinkedImportLoanCashRepayments,
+          barterReceivedTotal: unlinkedBarterReceivedTotal,
+          exportSales: unlinkedExportSales,
+          totalRevenue: unlinkedRevenue,
+          totalProfit: unlinkedRevenue,
+          status: 'RECEIVED' as any,
+        });
+      }
+
+      // ── Aggregate Global Totals ──────────────────────────────────────────
+      const totalCost = ordersSummary.reduce((sum, o) => sum + o.totalCost, 0);
+      const totalRevenue = ordersSummary.reduce((sum, o) => sum + o.totalRevenue, 0) + unlinkedRevenue;
+      const totalProfit = totalRevenue - totalCost;
+
+      // ── Build Compatibility Lists ─────────────────────────────────────────
+
+      // 1. Sales (Dispatches) List
+      const sales = allDispatches.map((d) => ({
+        id: d.id,
+        productId: d.productId,
+        date: d.dispatchDate,
+        productName_tm: d.product.name_tm,
+        productName_ru: d.product.name_ru,
+        client: d.client ? { tm: d.client.name_tm, ru: d.client.name_ru } : null,
+        quantity: d.quantity,
+        sellPrice: Number(d.sellPrice),
+        totalSellPrice: Number(d.totalSellPrice),
+        warehouseType: d.warehouseType,
+        note: d.note,
+      }));
+
+      // 2. Loan Repayments List
+      const loanRepayments = allLoans
+        .filter((l) => Number(l.paidAmount) > 0)
+        .map((l) => ({
+          id: l.id,
+          type: l.type,
+          client: l.client ? { tm: l.client.name_tm, ru: l.client.name_ru } : null,
+          paidAmount: Number(l.paidAmount),
+          lastPayDate: l.lastPayDate,
+          purchaseOrderId: l.purchaseOrderId,
+          purchaseOrderName: l.purchaseOrder?.orderName || null,
+        }));
+
+      // 3. Purchases (Flattened Order Items with allocated expenses)
+      const purchases: any[] = [];
+      orders.forEach((order) => {
+        const expenses = order.expenses;
+        let expensesTotal = 0;
+        if (expenses) {
+          const expenseFields = [
+            'tax', 'director', 'customs', 'transportation', 'workers',
+            'stockExchange', 'forensics', 'bank', 'textileMinistry',
+            'export', 'minusConjugation', 'additionalExpenses',
+          ];
+          expensesTotal = expenseFields.reduce((sum, key) => {
+            const val = Number((expenses as any)[key] ?? 0);
+            return sum + (isNaN(val) ? 0 : val);
+          }, 0);
+        }
+
+        const itemsCost = order.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+
+        order.items.forEach((item) => {
+          const cost = Number(item.totalPrice);
+          const allocatedExpense = itemsCost > 0 ? expensesTotal * (cost / itemsCost) : 0;
+
+          purchases.push({
+            id: item.id,
+            productId: item.productId,
+            orderId: item.purchaseOrderId,
+            orderName: order.orderName,
+            date: order.orderDate,
+            productName_tm: item.product.name_tm,
+            productName_ru: item.product.name_ru,
+            supplier: order.supplier
+              ? { tm: order.supplier.name_tm, ru: order.supplier.name_ru }
+              : null,
+            quantity: item.quantity,
+            unitPrice: Number(item.unitPrice),
+            totalCost: cost,
+            expensesTotal: allocatedExpense,
+          });
+        });
+      });
+
+      // 4. Products Summary (grouped by product, with landed costs)
       const productMap = new Map<
         number,
         {
@@ -60,20 +247,21 @@ export class IncomeController {
         }
       >();
 
-      // Build dispatch (sales) list
-      const sales = dispatches.map((d) => {
-        const revenue = Number(d.totalSellPrice);
-        totalRevenue += revenue;
-
-        const existing = productMap.get(d.productId);
+      sales.forEach((d) => {
+        const revenue = d.totalSellPrice;
+        const existing = productMap.get(d.productId ?? 0) || Array.from(productMap.values()).find(x => x.name_tm === d.productName_tm);
+        const productId = d.productId ?? (existing ? existing.productId : 0);
         if (existing) {
           existing.quantitySold += d.quantity;
           existing.totalRevenue += revenue;
         } else {
-          productMap.set(d.productId, {
-            productId: d.productId,
-            name_tm: d.product.name_tm,
-            name_ru: d.product.name_ru,
+          // Find matching dispatch item product ID
+          const rawDispatch = allDispatches.find((x) => x.id === d.id);
+          const pid = rawDispatch ? rawDispatch.productId : 0;
+          productMap.set(pid, {
+            productId: pid,
+            name_tm: d.productName_tm,
+            name_ru: d.productName_ru,
             quantitySold: d.quantity,
             quantityPurchased: 0,
             totalRevenue: revenue,
@@ -81,73 +269,42 @@ export class IncomeController {
             totalProfit: 0,
           });
         }
-
-        return {
-          id: d.id,
-          date: d.dispatchDate,
-          productName_tm: d.product.name_tm,
-          productName_ru: d.product.name_ru,
-          client: d.client ? { tm: d.client.name_tm, ru: d.client.name_ru } : null,
-          quantity: d.quantity,
-          sellPrice: Number(d.sellPrice),
-          totalSellPrice: revenue,
-          warehouseType: d.warehouseType,
-          note: d.note,
-        };
       });
 
-      // Build purchase (cost) list
-      const purchases = orderItems.map((item) => {
-        const cost = Number(item.totalPrice);
-        totalCost += cost;
-
-        const existing = productMap.get(item.productId);
+      purchases.forEach((p) => {
+        const cost = p.totalCost + p.expensesTotal;
+        const existing = productMap.get(p.productId);
         if (existing) {
-          existing.quantityPurchased += item.quantity;
+          existing.quantityPurchased += p.quantity;
           existing.totalCost += cost;
         } else {
-          productMap.set(item.productId, {
-            productId: item.productId,
-            name_tm: item.product.name_tm,
-            name_ru: item.product.name_ru,
+          productMap.set(p.productId, {
+            productId: p.productId,
+            name_tm: p.productName_tm,
+            name_ru: p.productName_ru,
             quantitySold: 0,
-            quantityPurchased: item.quantity,
+            quantityPurchased: p.quantity,
             totalRevenue: 0,
             totalCost: cost,
             totalProfit: 0,
           });
         }
-
-        return {
-          id: item.id,
-          orderId: item.purchaseOrderId,
-          date: item.purchaseOrder.orderDate,
-          productName_tm: item.product.name_tm,
-          productName_ru: item.product.name_ru,
-          supplier: item.purchaseOrder.supplier
-            ? { tm: item.purchaseOrder.supplier.name_tm, ru: item.purchaseOrder.supplier.name_ru }
-            : null,
-          quantity: item.quantity,
-          unitPrice: Number(item.unitPrice),
-          totalCost: cost,
-        };
       });
 
-      // ── Recalculate profit per product: simply revenue - cost ──────────────
       const products = Array.from(productMap.values()).map((p) => ({
         ...p,
         totalProfit: p.totalRevenue - p.totalCost,
       }));
 
-      const totalProfit = totalRevenue - totalCost;
-
       res.json({
         totalRevenue,
         totalCost,
         totalProfit,
+        orders: ordersList,
         products,
         sales,
         purchases,
+        loanRepayments,
       });
     } catch (error) {
       console.error('Income summary error:', error);

@@ -12,6 +12,7 @@ import { authController } from './controllers/auth.controller';
 import { userController } from './controllers/user.controller';
 import { roleController } from './controllers/role.controller';
 import { permissionController } from './controllers/permission.controller';
+import { loanController } from './controllers/loan.controller';
 import { authenticateToken } from './middlewares/auth.middleware';
 import { requirePermission } from './middlewares/permission.middleware';
 dotenv.config();
@@ -73,6 +74,7 @@ app.get('/api/orders/debt-summary', authenticateToken, requirePermission('VIEW_I
 app.post('/api/orders', authenticateToken, requirePermission('MANAGE_ORDERS'), (req, res) => purchaseOrderController.createOrder(req, res));
 app.patch('/api/orders/:id/pay', authenticateToken, requirePermission('MANAGE_ORDERS'), (req, res) => purchaseOrderController.recordPayment(req, res));
 app.patch('/api/orders/:id/status', authenticateToken, requirePermission('MANAGE_ORDERS'), (req, res) => purchaseOrderController.updateOrderStatus(req, res));
+app.patch('/api/orders/:id/expenses', authenticateToken, requirePermission('MANAGE_ORDERS'), (req, res) => purchaseOrderController.upsertExpenses(req, res));
 app.patch('/api/orders/:id', authenticateToken, requirePermission('MANAGE_ORDERS'), (req, res) => purchaseOrderController.updateOrder(req, res));
 app.delete('/api/orders/:id', authenticateToken, requirePermission('MANAGE_ORDERS'), (req, res) => purchaseOrderController.deleteOrder(req, res));
 app.get('/api/suppliers/:id/balance', authenticateToken, requirePermission('MANAGE_SUPPLIERS'), (req, res) => purchaseOrderController.getSupplierBalance(req, res));
@@ -92,6 +94,14 @@ app.delete('/api/warehouse/dispatches/:id', authenticateToken, requirePermission
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'ERP Backend is running' });
 });
+
+// Loan routes
+app.get('/api/loans', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => loanController.getLoans(req, res));
+app.get('/api/loans/summary', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => loanController.getSummary(req, res));
+app.post('/api/loans/:id/pay-money', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => loanController.payByMoney(req, res));
+app.post('/api/loans/:id/pay-product', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => loanController.payByProduct(req, res));
+app.post('/api/loans/group/:groupId/pay-money', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => loanController.payGroupByMoney(req, res));
+app.post('/api/loans/group/:groupId/pay-product', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => loanController.payGroupByProduct(req, res));
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

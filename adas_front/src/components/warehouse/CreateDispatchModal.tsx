@@ -9,12 +9,17 @@ import {
   Modal,
   Select,
   Space,
+  Switch,
 } from "antd";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FaArrowRight, FaPlus, FaTrash } from "react-icons/fa6";
-import { useCreateDispatchMutation, useGetStockQuery } from "@/services/warehouseApi";
+import {
+  useCreateDispatchMutation,
+  useGetStockQuery,
+} from "@/services/warehouseApi";
 import { useGetClientsQuery } from "@/services/clientsApi";
+import { useGetOrdersQuery } from "@/services/ordersApi";
 import type { WarehouseType } from "@/interfaces/warehouses.interface";
 import dayjs from "dayjs";
 
@@ -28,8 +33,11 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
   const [form] = Form.useForm();
   const [open, setOpen] = useState(false);
 
-  const { data: stock, refetch: refetchStock } = useGetStockQuery({ type: warehouseType });
+  const { data: stock, refetch: refetchStock } = useGetStockQuery({
+    type: warehouseType,
+  });
   const { data: clients } = useGetClientsQuery();
+  const { data: ordersData } = useGetOrdersQuery({ isPaid: false });
   const [createDispatch, { isLoading }] = useCreateDispatchMutation();
 
   // Stock map for quick lookup
@@ -58,11 +66,14 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
     try {
       await createDispatch({
         warehouseType,
+        dispatchName: values.dispatchName || "",
         clientId: values.clientId || null,
         note: values.note || "",
         dispatchDate: values.dispatchDate
           ? dayjs(values.dispatchDate).toISOString()
           : undefined,
+        isLoan: values.isLoan || false,
+        purchaseOrderId: values.purchaseOrderId || null,
         items: values.items.map((item: any) => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -77,14 +88,15 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
     }
   };
 
-  const productOptions = stock
-    ?.filter((s) => s.currentStock > 0)
-    .map((s) => ({
-      value: s.productId,
-      label: `${
-        i18n.language === "ru" ? s.product?.name_ru : s.product?.name_tm
-      } (${t("in_stock")}: ${s.currentStock})`,
-    })) || [];
+  const productOptions =
+    stock
+      ?.filter((s) => s.currentStock > 0)
+      .map((s) => ({
+        value: s.productId,
+        label: `${
+          i18n.language === "ru" ? s.product?.name_ru : s.product?.name_tm
+        } (${t("in_stock")}: ${s.currentStock})`,
+      })) || [];
 
   return (
     <>
@@ -111,8 +123,11 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
           onFinish={handleSubmit}
           initialValues={{ items: [{}] }}
         >
-          {/* Client & date */}
+          {/* Client, date & isLoan */}
           <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="dispatchName" label={t("dispatch_name")}>
+              <Input placeholder={t("dispatch_name")} />
+            </Form.Item>
             <Form.Item name="clientId" label={t("client")}>
               <Select
                 showSearch
@@ -125,22 +140,44 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
                 }))}
               />
             </Form.Item>
-
-            <Form.Item name="dispatchDate" label={t("date")}>
-              <DatePicker className="w-full" />
-            </Form.Item>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="dispatchDate" label={t("date")}>
+              <DatePicker className="w-full" format="DD.MM.YYYY" />
+            </Form.Item>
+            <div className="flex items-center gap-3">
+              <Form.Item name="isLoan" valuePropName="checked" noStyle>
+                <Switch />
+              </Form.Item>
+              <span className="font-medium text-sm">{t("is_loan")}</span>
+            </div>
+          </div>
+
+          {/* Link to purchase order */}
+          <Form.Item name="purchaseOrderId" label={t("link_to_order")}>
+            <Select
+              showSearch
+              allowClear
+              optionFilterProp="label"
+              placeholder={t("select_order")}
+              options={ordersData?.list?.map((o) => ({
+                value: o.id,
+                label: `${o.orderName}`,
+              }))}
+            />
+          </Form.Item>
 
           <Form.Item name="note" label={t("note")}>
             <Input.TextArea rows={2} placeholder={t("note")} />
           </Form.Item>
 
-          <Divider orientation="left">{t("products")}</Divider>
+          <Divider orientation="center">{t("products")}</Divider>
 
           {/* Multi-item list */}
           <Form.List name="items">
             {(fields, { add, remove }) => (
-              <>
+              <div className="w-full flex flex-col gap-8">
                 {fields.map(({ key, name, ...restField }) => {
                   const selectedProductId = items?.[name]?.productId;
                   const maxQty = selectedProductId
@@ -148,90 +185,107 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
                     : undefined;
 
                   return (
-                    <Space
+                    <div
                       key={key}
-                      style={{ display: "flex", marginBottom: 8 }}
-                      align="baseline"
+                      className="w-full grid grid-cols-1 md:grid-cols-2 gap-4"
                     >
                       <Form.Item
                         {...restField}
                         name={[name, "productId"]}
-                        rules={[{ required: true, message: t("required_field") }]}
+                        rules={[
+                          { required: true, message: t("required_field") },
+                        ]}
+                        className="w-full"
                       >
                         <Select
                           placeholder={t("select_product")}
-                          style={{ width: 260 }}
+                          className="w-full"
                           showSearch
                           optionFilterProp="label"
                           options={productOptions}
                           onChange={() => {
                             // Reset quantity when product changes
-                            const currentItems = form.getFieldValue("items") || [];
+                            const currentItems =
+                              form.getFieldValue("items") || [];
                             const updated = [...currentItems];
-                            updated[name] = { ...updated[name], quantity: undefined };
+                            updated[name] = {
+                              ...updated[name],
+                              quantity: undefined,
+                            };
                             form.setFieldsValue({ items: updated });
                             // Re-validate quantity field
                             form.validateFields([["items", name, "quantity"]]);
                           }}
                         />
                       </Form.Item>
-
-                      <Form.Item
-                        {...restField}
-                        name={[name, "quantity"]}
-                        rules={[
-                          { required: true, message: t("required_field") },
-                          {
-                            validator: (_, value) => {
-                              if (!value) return Promise.resolve();
-                              const selectedProductId = form.getFieldValue([
-                                "items",
-                                name,
-                                "productId",
-                              ]);
-                              if (!selectedProductId) return Promise.resolve();
-                              const available = stockMap.get(selectedProductId) ?? 0;
-                              if (value > available) {
-                                return Promise.reject(
-                                  new Error(
-                                    `${t("max_stock")}: ${available}`
-                                  )
-                                );
-                              }
-                              return Promise.resolve();
+                      <div className="w-full flex items-start gap-4">
+                        <Form.Item
+                          {...restField}
+                          className="w-full"
+                          name={[name, "quantity"]}
+                          rules={[
+                            { required: true, message: t("required_field") },
+                            {
+                              validator: (_, value) => {
+                                if (!value) return Promise.resolve();
+                                const selectedProductId = form.getFieldValue([
+                                  "items",
+                                  name,
+                                  "productId",
+                                ]);
+                                if (!selectedProductId)
+                                  return Promise.resolve();
+                                const available =
+                                  stockMap.get(selectedProductId) ?? 0;
+                                if (value > available) {
+                                  return Promise.reject(
+                                    new Error(
+                                      `${t("max_stock")}: ${available}`,
+                                    ),
+                                  );
+                                }
+                                return Promise.resolve();
+                              },
                             },
-                          },
-                        ]}
-                      >
-                        <InputNumber
-                          min={1}
-                          max={maxQty}
-                          placeholder={t("quantity")}
-                          style={{ width: 110 }}
-                        />
-                      </Form.Item>
+                          ]}
+                        >
+                          <InputNumber
+                            min={1}
+                            max={maxQty}
+                            placeholder={t("quantity")}
+                            className="w-full"
+                          />
+                        </Form.Item>
 
-                      <Form.Item
-                        {...restField}
-                        name={[name, "sellPrice"]}
-                        rules={[{ required: true, message: t("required_field") }]}
-                      >
-                        <InputNumber
-                          min={0}
-                          step={0.01}
-                          placeholder={t("sell_price")}
-                          style={{ width: 130 }}
-                          addonAfter="TMT"
-                        />
-                      </Form.Item>
+                        <Form.Item
+                          {...restField}
+                          name={[name, "sellPrice"]}
+                          rules={[
+                            { required: true, message: t("required_field") },
+                          ]}
+                          className="w-full"
+                        >
+                          <InputNumber
+                            min={0}
+                            step={0.01}
+                            placeholder={t("sell_price")}
+                            addonAfter="$"
+                            className="w-full"
+                          />
+                        </Form.Item>
 
-                      {fields.length > 1 && (
-                        <FaTrash
-                          className="text-red-500 cursor-pointer mb-2"
-                          onClick={() => remove(name)}
-                        />
-                      )}
-                    </Space>
+                        {fields.length > 1 && (
+                          <div className="w-fit">
+                            <Button
+                              type="text"
+                              icon={<FaTrash />}
+                              onClick={() => remove(name)}
+                              danger
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   );
                 })}
 
@@ -245,7 +299,7 @@ const CreateDispatchModal = ({ warehouseType }: Props) => {
                     {t("add_item")}
                   </Button>
                 </Form.Item>
-              </>
+              </div>
             )}
           </Form.List>
 

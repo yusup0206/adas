@@ -18,9 +18,12 @@ const ArrivalSchema = z.object({
 
 const DispatchSchema = z.object({
   warehouseType: z.enum(['IMPORT', 'EXPORT']),
+  dispatchName: z.string().optional().default(''),
   clientId: z.coerce.number().int().positive().optional().nullable(),
   note: z.string().optional().default(''),
   dispatchDate: z.string().optional(),
+  isLoan: z.boolean().optional().default(false),
+  purchaseOrderId: z.coerce.number().int().positive().optional().nullable(),
   items: z.array(z.object({
     productId: z.coerce.number().int().positive(),
     quantity: z.coerce.number().int().positive(),

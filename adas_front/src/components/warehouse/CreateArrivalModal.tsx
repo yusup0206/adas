@@ -134,7 +134,7 @@ const CreateArrivalModal = ({ warehouseType }: Props) => {
             )}
 
             <Form.Item name="arrivalDate" label={t("date")} className="col-span-2">
-              <DatePicker className="w-full" />
+              <DatePicker className="w-full" format="DD.MM.YYYY" />
             </Form.Item>
 
             <Form.Item name="note" label={t("note")} className="col-span-2">

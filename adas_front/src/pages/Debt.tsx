@@ -10,8 +10,11 @@ import {
   Modal,
   Divider,
   DatePicker,
+  Tabs,
+  Select,
 } from "antd";
-import type { TableProps } from "antd";
+const { RangePicker } = DatePicker;
+import type { TableProps, TabsProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import {
@@ -19,13 +22,19 @@ import {
   useRecordPaymentMutation,
   useGetDebtSummaryQuery,
 } from "@/services/ordersApi";
+import { useGetLoansQuery, useGetLoanSummaryQuery } from "@/services/loansApi";
 import type { Order } from "@/interfaces/orders.interface";
+import type { Loan, LoanGroup } from "@/interfaces/loans.interface";
 import {
   FaMoneyBillWave,
   FaCircleCheck,
   FaFileInvoiceDollar,
 } from "react-icons/fa6";
+import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import ImportLoanPayModal from "@/components/loans/ImportLoanPayModal";
+import ExportLoanPayModal from "@/components/loans/ExportLoanPayModal";
+import { useSearchParams } from "react-router-dom";
 
 // ── Stat card ──────────────────────────────────────────────────────────────
 const StatCard = ({
@@ -54,7 +63,7 @@ const StatCard = ({
   </div>
 );
 
-// ── Pay modal ──────────────────────────────────────────────────────────────
+// ── Pay modal (Suppliers) ──────────────────────────────────────────────────
 const PayModal = ({
   record,
   open,
@@ -113,7 +122,6 @@ const PayModal = ({
       destroyOnClose
     >
       <div className="space-y-4 pt-2">
-        {/* Summary info */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-gray-500 mb-1">{t("total_price")}</p>
@@ -131,7 +139,6 @@ const PayModal = ({
 
         <Divider className="my-3" />
 
-        {/* Payment form */}
         <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <span className="font-semibold">{t("current_debt")}:</span>
@@ -169,7 +176,6 @@ const PayModal = ({
             />
           </div>
 
-          {/* Live preview */}
           {amount !== null && amount > 0 && (
             <div
               className={`flex justify-between items-center rounded-md px-3 py-2 ${
@@ -188,7 +194,6 @@ const PayModal = ({
           )}
         </div>
 
-        {/* Actions */}
         <div className="flex justify-end gap-2 pt-1">
           <Button onClick={handleClose}>{t("cancel")}</Button>
           <Button
@@ -205,19 +210,58 @@ const PayModal = ({
   );
 };
 
-// ── Main Debt page ─────────────────────────────────────────────────────────
-const Debt = () => {
+// ── Tab: Supplier Debt ─────────────────────────────────────────────────────
+const SupplierDebtPanel = () => {
   const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const statusFilter = searchParams.get("status") || "ALL";
+  const dateFrom = searchParams.get("dateFrom") || undefined;
+  const dateTo = searchParams.get("dateTo") || undefined;
+
+  const dates: [dayjs.Dayjs, dayjs.Dayjs] | null =
+    dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null;
 
   const { data: ordersData, isLoading } = useGetOrdersQuery({
     isPaid: false,
-    pageSize: "50",
+    page,
+    pageSize: 10,
+    status: statusFilter,
+    dateFrom,
+    dateTo,
   });
-  const { data: summary, isLoading: summaryLoading } = useGetDebtSummaryQuery();
+  const { data: summary, isLoading: summaryLoading } = useGetDebtSummaryQuery({
+    dateFrom,
+    dateTo,
+  });
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const unpaidOrders = ordersData?.list ?? [];
+
+  const handlePageChange = (p: number) => {
+    searchParams.set("page", String(p));
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleStatusChange = (val: string) => {
+    searchParams.set("status", val);
+    searchParams.set("page", "1");
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleDatesChange = (vals: any) => {
+    if (vals) {
+      searchParams.set("dateFrom", vals[0].format("YYYY-MM-DD"));
+      searchParams.set("dateTo", vals[1].format("YYYY-MM-DD"));
+    } else {
+      searchParams.delete("dateFrom");
+      searchParams.delete("dateTo");
+    }
+    searchParams.set("page", "1");
+    setSearchParams(searchParams, { replace: true });
+  };
 
   const columns: TableProps<Order>["columns"] = [
     {
@@ -263,7 +307,7 @@ const Debt = () => {
       },
     },
     {
-      title: t("order_status"),
+      title: t("status"),
       dataIndex: "status",
       key: "status",
       render: (status: string) => (
@@ -298,66 +342,731 @@ const Debt = () => {
 
   return (
     <>
-      <section>
-        <Header title={t("debt")} />
-        <Section>
-          {/* ── 3 summary cards ── */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <StatCard
-              icon={<FaMoneyBillWave />}
-              label={t("total_debt")}
-              value={
-                summaryLoading
-                  ? "..."
-                  : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
-              }
-              color="text-red-500"
-              bg="bg-red-50"
-            />
-            <StatCard
-              icon={<FaCircleCheck />}
-              label={t("total_paid")}
-              value={
-                summaryLoading
-                  ? "..."
-                  : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
-              }
-              color="text-green-600"
-              bg="bg-green-50"
-            />
-            <StatCard
-              icon={<FaFileInvoiceDollar />}
-              label={t("unpaid_orders_count")}
-              value={
-                summaryLoading ? "..." : String(summary?.unpaidOrdersCount ?? 0)
-              }
-              color="text-orange-500"
-              bg="bg-orange-50"
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <StatCard
+          icon={<FaMoneyBillWave />}
+          label={t("total_debt")}
+          value={
+            summaryLoading
+              ? "..."
+              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
+          }
+          color="text-red-500"
+          bg="bg-red-50"
+        />
+        <StatCard
+          icon={<FaCircleCheck />}
+          label={t("total_paid")}
+          value={
+            summaryLoading
+              ? "..."
+              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
+          }
+          color="text-green-600"
+          bg="bg-green-50"
+        />
+        <StatCard
+          icon={<FaFileInvoiceDollar />}
+          label={t("unpaid_orders_count")}
+          value={
+            summaryLoading ? "..." : String(summary?.unpaidOrdersCount ?? 0)
+          }
+          color="text-orange-500"
+          bg="bg-orange-50"
+        />
+      </div>
 
-          {/* ── Unpaid orders table ── */}
-          <Box>
-            <Table
-              loading={isLoading}
-              size="large"
-              columns={columns}
-              dataSource={unpaidOrders}
-              rowKey="id"
-              pagination={{ position: ["bottomCenter"], pageSize: 10 }}
-              className="overflow-x-auto"
-            />
-          </Box>
-        </Section>
-      </section>
+      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+        <Select
+          className="w-48"
+          value={statusFilter}
+          onChange={handleStatusChange}
+          options={[
+            { label: t("status_all"), value: "ALL" },
+            { label: t("PENDING"), value: "PENDING" },
+            { label: t("RECEIVED"), value: "RECEIVED" },
+          ]}
+        />
+        <RangePicker
+          className="w-72"
+          value={dates as any}
+          onChange={handleDatesChange}
+          format="DD.MM.YYYY"
+          placeholder={[t("date_from"), t("date_to")]}
+          allowClear
+        />
+      </div>
 
-      {/* ── Payment modal ── */}
+      <Table
+        loading={isLoading}
+        size="large"
+        columns={columns}
+        dataSource={unpaidOrders}
+        rowKey="id"
+        pagination={{
+          position: ["bottomCenter"],
+          current: page,
+          total: ordersData?.total || 0,
+          onChange: handlePageChange,
+        }}
+        className="overflow-x-auto"
+      />
+
       <PayModal
         record={selectedOrder}
         open={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
       />
     </>
+  );
+};
+
+// ── Tab: Import Loans ──────────────────────────────────────────────────────
+const ImportLoansPanel = () => {
+  const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const statusFilter = searchParams.get("status") || "ALL";
+  const dateFrom = searchParams.get("dateFrom") || undefined;
+  const dateTo = searchParams.get("dateTo") || undefined;
+
+  const dates: [dayjs.Dayjs, dayjs.Dayjs] | null =
+    dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null;
+
+  const handlePageChange = (p: number) => {
+    searchParams.set("page", String(p));
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleStatusChange = (val: string) => {
+    searchParams.set("status", val);
+    searchParams.set("page", "1");
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleDatesChange = (vals: any) => {
+    if (vals) {
+      searchParams.set("dateFrom", vals[0].format("YYYY-MM-DD"));
+      searchParams.set("dateTo", vals[1].format("YYYY-MM-DD"));
+    } else {
+      searchParams.delete("dateFrom");
+      searchParams.delete("dateTo");
+    }
+    searchParams.set("page", "1");
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const { data, isLoading } = useGetLoansQuery({
+    type: "IMPORT",
+    page,
+    pageSize: 10,
+    status: statusFilter,
+    dateFrom,
+    dateTo,
+  });
+  const { data: summary, isLoading: summaryLoading } = useGetLoanSummaryQuery({
+    type: "IMPORT",
+    dateFrom,
+    dateTo,
+  });
+  const [selectedGroup, setSelectedGroup] = useState<LoanGroup | null>(null);
+  const [viewGroup, setViewGroup] = useState<LoanGroup | null>(null);
+
+  const columns: TableProps<LoanGroup>["columns"] = [
+    {
+      title: "№",
+      render: (_, __, i) => (page - 1) * 10 + i + 1,
+      width: 60,
+    },
+    {
+      title: t("dispatch_name"),
+      dataIndex: "dispatchName",
+      render: (v: string) => v || "-",
+    },
+    {
+      title: t("client"),
+      render: (_, r) =>
+        i18n.language === "ru" ? r.client?.name_ru : r.client?.name_tm,
+    },
+    {
+      title: t("total_price"),
+      dataIndex: "totalAmount",
+      render: (v: number) => (
+        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+      ),
+    },
+    {
+      title: t("paid_amount"),
+      dataIndex: "paidAmount",
+      render: (v: number) => (
+        <span className="text-green-600 font-medium">
+          {Number(v || 0).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("current_debt"),
+      render: (_, r) => {
+        const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
+        return (
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+        );
+      },
+    },
+    {
+      title: t("status"),
+      dataIndex: "status",
+      render: (status: string) => (
+        <Tag
+          color={
+            status === "CLOSED"
+              ? "green"
+              : status === "PARTIAL"
+                ? "blue"
+                : "orange"
+          }
+        >
+          {t(`loan_status_${status}`)}
+        </Tag>
+      ),
+    },
+    {
+      title: t("note"),
+      render: (_, r) => {
+        if (!r.items || r.items.length === 0) return "-";
+        const notes = r.items.map((item) => item.note).filter(Boolean);
+        const uniqueNotes = Array.from(new Set(notes));
+        return uniqueNotes.length > 0 ? uniqueNotes.join(", ") : "-";
+      },
+    },
+    {
+      title: t("last_pay_date"),
+      dataIndex: "lastPayDate",
+      render: (d: string) => (d ? dayjs(d).format("DD.MM.YYYY") : "-"),
+    },
+
+    {
+      title: t("actions"),
+      render: (_, r) => (
+        <div className="flex gap-2">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => setViewGroup(r)}
+          />
+          <Button
+            type="primary"
+            size="small"
+            icon={<FaMoneyBillWave />}
+            disabled={r.status === "CLOSED"}
+            onClick={() => setSelectedGroup(r)}
+          >
+            {t("pay")}
+          </Button>
+        </div>
+      ),
+      width: 150,
+    },
+  ];
+
+  const innerColumns: TableProps<Loan>["columns"] = [
+    {
+      title: "№",
+      render: (_, __, i) => i + 1,
+      width: 60,
+    },
+    {
+      title: t("total_price"),
+      dataIndex: "totalAmount",
+      render: (v: number) => (
+        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+      ),
+    },
+    {
+      title: t("paid_amount"),
+      dataIndex: "paidAmount",
+      render: (v: number) => (
+        <span className="text-green-600 font-medium">
+          {Number(v || 0).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("current_debt"),
+      render: (_, r) => {
+        const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
+        return (
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+        );
+      },
+    },
+    {
+      title: t("status"),
+      dataIndex: "status",
+      render: (status: string) => (
+        <Tag
+          color={
+            status === "CLOSED"
+              ? "green"
+              : status === "PARTIAL"
+                ? "blue"
+                : "orange"
+          }
+        >
+          {t(`loan_status_${status}`)}
+        </Tag>
+      ),
+    },
+    {
+      title: t("last_pay_date"),
+      dataIndex: "lastPayDate",
+      render: (d: string) => (d ? dayjs(d).format("DD.MM.YYYY") : "-"),
+    },
+  ];
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <StatCard
+          icon={<FaMoneyBillWave />}
+          label={t("total_debt")}
+          value={
+            summaryLoading
+              ? "..."
+              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
+          }
+          color="text-red-500"
+          bg="bg-red-50"
+        />
+        <StatCard
+          icon={<FaCircleCheck />}
+          label={t("total_paid")}
+          value={
+            summaryLoading
+              ? "..."
+              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
+          }
+          color="text-green-600"
+          bg="bg-green-50"
+        />
+        <StatCard
+          icon={<FaFileInvoiceDollar />}
+          label={t("open_loans_count")}
+          value={summaryLoading ? "..." : String(summary?.openCount ?? 0)}
+          color="text-orange-500"
+          bg="bg-orange-50"
+        />
+      </div>
+
+      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+        <Select
+          className="w-48"
+          value={statusFilter}
+          onChange={handleStatusChange}
+          options={[
+            { label: t("status_all"), value: "ALL" },
+            { label: t("loan_status_NOT_CLOSED"), value: "NOT_CLOSED" },
+            { label: t("loan_status_OPEN"), value: "OPEN" },
+            { label: t("loan_status_PARTIAL"), value: "PARTIAL" },
+            { label: t("loan_status_CLOSED"), value: "CLOSED" },
+          ]}
+        />
+        <RangePicker
+          className="w-72"
+          value={dates as any}
+          onChange={handleDatesChange}
+          format="DD.MM.YYYY"
+          placeholder={[t("date_from"), t("date_to")]}
+          allowClear
+        />
+      </div>
+
+      <Table
+        loading={isLoading}
+        size="large"
+        columns={columns}
+        dataSource={data?.list ?? []}
+        rowKey="id"
+        pagination={{
+          position: ["bottomCenter"],
+          current: page,
+          total: data?.total || 0,
+          onChange: handlePageChange,
+        }}
+        className="overflow-x-auto"
+      />
+
+      <Modal
+        title={t("view_products")}
+        open={!!viewGroup}
+        onCancel={() => setViewGroup(null)}
+        footer={null}
+        width={800}
+      >
+        <Table
+          columns={innerColumns}
+          dataSource={viewGroup?.items || []}
+          rowKey="id"
+          size="small"
+          pagination={false}
+        />
+      </Modal>
+
+      <ImportLoanPayModal
+        loanGroup={selectedGroup}
+        open={!!selectedGroup}
+        onClose={() => setSelectedGroup(null)}
+      />
+    </>
+  );
+};
+
+// ── Tab: Export Loans ──────────────────────────────────────────────────────
+const ExportLoansPanel = () => {
+  const { t, i18n } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const page = Number(searchParams.get("page")) || 1;
+  const statusFilter = searchParams.get("status") || "ALL";
+  const dateFrom = searchParams.get("dateFrom") || undefined;
+  const dateTo = searchParams.get("dateTo") || undefined;
+
+  const dates: [dayjs.Dayjs, dayjs.Dayjs] | null =
+    dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null;
+
+  const handlePageChange = (p: number) => {
+    searchParams.set("page", String(p));
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleStatusChange = (val: string) => {
+    searchParams.set("status", val);
+    searchParams.set("page", "1");
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const handleDatesChange = (vals: any) => {
+    if (vals) {
+      searchParams.set("dateFrom", vals[0].format("YYYY-MM-DD"));
+      searchParams.set("dateTo", vals[1].format("YYYY-MM-DD"));
+    } else {
+      searchParams.delete("dateFrom");
+      searchParams.delete("dateTo");
+    }
+    searchParams.set("page", "1");
+    setSearchParams(searchParams, { replace: true });
+  };
+
+  const { data, isLoading } = useGetLoansQuery({
+    type: "EXPORT",
+    page,
+    pageSize: 10,
+    status: statusFilter,
+    dateFrom,
+    dateTo,
+  });
+  const { data: summary, isLoading: summaryLoading } = useGetLoanSummaryQuery({
+    type: "EXPORT",
+    dateFrom,
+    dateTo,
+  });
+  const [selectedGroup, setSelectedGroup] = useState<LoanGroup | null>(null);
+  const [viewGroup, setViewGroup] = useState<LoanGroup | null>(null);
+
+  const columns: TableProps<LoanGroup>["columns"] = [
+    {
+      title: "№",
+      render: (_, __, i) => (page - 1) * 10 + i + 1,
+      width: 60,
+    },
+    {
+      title: t("dispatch_name"),
+      dataIndex: "dispatchName",
+      render: (v: string) => v || "-",
+    },
+    {
+      title: t("client"),
+      render: (_, r) =>
+        i18n.language === "ru" ? r.client?.name_ru : r.client?.name_tm,
+    },
+    {
+      title: t("total_price"),
+      dataIndex: "totalAmount",
+      render: (v: number) => (
+        <span className="font-medium">{Number(v).toFixed(2)} $</span>
+      ),
+    },
+    {
+      title: t("paid_amount"),
+      dataIndex: "paidAmount",
+      render: (v: number) => (
+        <span className="text-green-600 font-medium">
+          {Number(v || 0).toFixed(2)} $
+        </span>
+      ),
+    },
+    {
+      title: t("current_debt"),
+      render: (_, r) => {
+        const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
+        return (
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+        );
+      },
+    },
+    {
+      title: t("status"),
+      dataIndex: "status",
+      render: (status: string) => (
+        <Tag
+          color={
+            status === "CLOSED"
+              ? "green"
+              : status === "PARTIAL"
+                ? "blue"
+                : "orange"
+          }
+        >
+          {t(`loan_status_${status}`)}
+        </Tag>
+      ),
+    },
+    {
+      title: t("note"),
+      render: (_, r) => {
+        if (!r.items || r.items.length === 0) return "-";
+        const notes = r.items.map((item) => item.note).filter(Boolean);
+        const uniqueNotes = Array.from(new Set(notes));
+        return uniqueNotes.length > 0 ? uniqueNotes.join(", ") : "-";
+      },
+    },
+    {
+      title: t("last_pay_date"),
+      dataIndex: "lastPayDate",
+      render: (d: string) => (d ? dayjs(d).format("DD.MM.YYYY") : "-"),
+    },
+
+    {
+      title: t("actions"),
+      render: (_, r) => (
+        <div className="flex gap-2">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => setViewGroup(r)}
+          />
+          <Button
+            type="primary"
+            size="small"
+            icon={<FaMoneyBillWave />}
+            disabled={r.status === "CLOSED"}
+            onClick={() => setSelectedGroup(r)}
+          >
+            {t("pay")}
+          </Button>
+        </div>
+      ),
+      width: 150,
+    },
+  ];
+
+  const innerColumns: TableProps<Loan>["columns"] = [
+    {
+      title: "№",
+      render: (_, __, i) => i + 1,
+      width: 60,
+    },
+    {
+      title: t("total_price"),
+      dataIndex: "totalAmount",
+      render: (v: number) => (
+        <span className="font-medium">{Number(v).toFixed(2)} TMT</span>
+      ),
+    },
+    {
+      title: t("paid_amount"),
+      dataIndex: "paidAmount",
+      render: (v: number) => (
+        <span className="text-green-600 font-medium">
+          {Number(v || 0).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("current_debt"),
+      render: (_, r) => {
+        const debt = Number(r.totalAmount) - Number(r.paidAmount || 0);
+        return (
+          <span className="text-red-500 font-bold">{debt.toFixed(2)} TMT</span>
+        );
+      },
+    },
+    {
+      title: t("status"),
+      dataIndex: "status",
+      render: (status: string) => (
+        <Tag
+          color={
+            status === "CLOSED"
+              ? "green"
+              : status === "PARTIAL"
+                ? "blue"
+                : "orange"
+          }
+        >
+          {t(`loan_status_${status}`)}
+        </Tag>
+      ),
+    },
+    {
+      title: t("last_pay_date"),
+      dataIndex: "lastPayDate",
+      render: (d: string) => (d ? dayjs(d).format("DD.MM.YYYY") : "-"),
+    },
+  ];
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <StatCard
+          icon={<FaMoneyBillWave />}
+          label={t("total_debt")}
+          value={
+            summaryLoading
+              ? "..."
+              : `${Number(summary?.totalDebt ?? 0).toFixed(2)} TMT`
+          }
+          color="text-red-500"
+          bg="bg-red-50"
+        />
+        <StatCard
+          icon={<FaCircleCheck />}
+          label={t("total_paid")}
+          value={
+            summaryLoading
+              ? "..."
+              : `${Number(summary?.totalPaid ?? 0).toFixed(2)} TMT`
+          }
+          color="text-green-600"
+          bg="bg-green-50"
+        />
+        <StatCard
+          icon={<FaFileInvoiceDollar />}
+          label={t("open_loans_count")}
+          value={summaryLoading ? "..." : String(summary?.openCount ?? 0)}
+          color="text-orange-500"
+          bg="bg-orange-50"
+        />
+      </div>
+
+      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+        <Select
+          className="w-48"
+          value={statusFilter}
+          onChange={handleStatusChange}
+          options={[
+            { label: t("status_all"), value: "ALL" },
+            { label: t("loan_status_NOT_CLOSED"), value: "NOT_CLOSED" },
+            { label: t("loan_status_OPEN"), value: "OPEN" },
+            { label: t("loan_status_PARTIAL"), value: "PARTIAL" },
+            { label: t("loan_status_CLOSED"), value: "CLOSED" },
+          ]}
+        />
+        <RangePicker
+          className="w-72"
+          value={dates as any}
+          onChange={handleDatesChange}
+          format="DD.MM.YYYY"
+          placeholder={[t("date_from"), t("date_to")]}
+          allowClear
+        />
+      </div>
+
+      <Table
+        loading={isLoading}
+        size="large"
+        columns={columns}
+        dataSource={data?.list ?? []}
+        rowKey="id"
+        pagination={{
+          position: ["bottomCenter"],
+          current: page,
+          total: data?.total || 0,
+          onChange: handlePageChange,
+        }}
+        className="overflow-x-auto"
+      />
+
+      <Modal
+        title={t("view_products")}
+        open={!!viewGroup}
+        onCancel={() => setViewGroup(null)}
+        footer={null}
+        width={800}
+      >
+        <Table
+          columns={innerColumns}
+          dataSource={viewGroup?.items || []}
+          rowKey="id"
+          size="small"
+          pagination={false}
+        />
+      </Modal>
+
+      <ExportLoanPayModal
+        loanGroup={selectedGroup}
+        open={!!selectedGroup}
+        onClose={() => setSelectedGroup(null)}
+      />
+    </>
+  );
+};
+
+// ── Main Debt page ─────────────────────────────────────────────────────────
+const Debt = () => {
+  const { t } = useTranslation();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "supplier_debt";
+
+  const handleTabChange = (key: string) => {
+    // Clear filters when switching tabs
+    setSearchParams({ tab: key }, { replace: true });
+  };
+
+  const tabs: TabsProps["items"] = [
+    {
+      key: "supplier_debt",
+      label: t("supplier_debt"),
+      children: <SupplierDebtPanel />,
+    },
+    {
+      key: "import_loans",
+      label: t("import_loans"),
+      children: <ImportLoansPanel />,
+    },
+    {
+      key: "export_loans",
+      label: t("export_loans"),
+      children: <ExportLoansPanel />,
+    },
+  ];
+
+  return (
+    <section>
+      <Header title={t("debt")} />
+      <Section>
+        <Box>
+          <Tabs
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            items={tabs}
+            size="large"
+          />
+        </Box>
+      </Section>
+    </section>
   );
 };
 

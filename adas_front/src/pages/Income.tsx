@@ -1,14 +1,16 @@
 import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
-import { Table, Tag, Tabs, Space } from "antd";
+import { Table, Tag, Tabs, Space, Popover, Tooltip } from "antd";
 import type { TableProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { useGetIncomeSummaryQuery } from "@/services/incomeApi";
 import type {
+  IncomeOrder,
   IncomeProduct,
   IncomeSale,
   IncomePurchase,
+  IncomeLoanRepayment,
 } from "@/interfaces/income.interface";
 import {
   FaArrowTrendUp,
@@ -17,6 +19,8 @@ import {
   FaBoxOpen,
   FaCartShopping,
   FaTruckFast,
+  FaMoneyBillTransfer,
+  FaFileInvoice,
 } from "react-icons/fa6";
 
 // ── Stat card (matches Debt page pattern) ─────────────────────────────────
@@ -55,6 +59,151 @@ const Income = () => {
   const isRu = i18n.language === "ru";
 
   const { data, isLoading } = useGetIncomeSummaryQuery();
+
+  // ── Orders table columns ─────────────────────────────────────────────────
+  const orderColumns: TableProps<IncomeOrder>["columns"] = [
+    {
+      title: "№",
+      key: "index",
+      width: 55,
+      render: (_: unknown, __: unknown, i: number) => (
+        <span className="text-gray-400 font-medium">{i + 1}</span>
+      ),
+    },
+    {
+      title: t("order"),
+      key: "order",
+      render: (_, r) =>
+        r.id === 0 ? (
+          <span className="font-semibold text-gray-500">{t("unlinked_transactions")}</span>
+        ) : (
+          <Tag color="blue">
+            #{r.id} — {r.orderName}
+          </Tag>
+        ),
+    },
+    {
+      title: t("date"),
+      dataIndex: "orderDate",
+      key: "orderDate",
+      render: (d: string, r) =>
+        r.id === 0 ? (
+          "—"
+        ) : (
+          <span className="text-gray-600">
+            {new Date(d).toLocaleDateString()}
+          </span>
+        ),
+    },
+    {
+      title: t("supplier"),
+      key: "supplier",
+      render: (_, r) =>
+        r.supplier ? (
+          isRu ? r.supplier.ru : r.supplier.tm
+        ) : (
+          <span className="text-gray-400">—</span>
+        ),
+    },
+    {
+      title: t("purchase_cost"),
+      dataIndex: "itemsCost",
+      key: "itemsCost",
+      render: (v: number, r) =>
+        r.id === 0 ? "—" : `${Number(v).toFixed(2)} TMT`,
+    },
+    {
+      title: t("additional_expenses"),
+      key: "expensesTotal",
+      render: (_, r) => {
+        if (r.id === 0) return "—";
+        if (!r.expensesTotal || r.expensesTotal === 0) return "0.00 TMT";
+        
+        const content = (
+          <div style={{ minWidth: 200 }} className="space-y-1.5 p-1">
+            {Object.entries(r.expensesBreakdown || {}).map(([key, val]) => {
+              if (!val || Number(val) === 0) return null;
+              return (
+                <div key={key} className="flex justify-between gap-6 text-xs pb-1 border-b border-gray-100 last:border-0 last:pb-0">
+                  <span className="text-gray-500">{t(`expense_${key}`)}:</span>
+                  <span className="font-semibold">{Number(val).toFixed(2)} TMT</span>
+                </div>
+              );
+            })}
+          </div>
+        );
+
+        return (
+          <Popover content={content} title={t("additional_expenses")} trigger="hover">
+            <span className="text-orange-500 font-medium cursor-pointer underline decoration-dotted">
+              {Number(r.expensesTotal).toFixed(2)} TMT
+            </span>
+          </Popover>
+        );
+      },
+    },
+    {
+      title: t("total_cost"),
+      dataIndex: "totalCost",
+      key: "totalCost",
+      render: (v: number, r) =>
+        r.id === 0 ? (
+          "—"
+        ) : (
+          <span className="text-red-500 font-semibold">
+            {Number(v).toFixed(2)} TMT
+          </span>
+        ),
+    },
+    {
+      title: t("cash_sales"),
+      key: "cash_sales",
+      render: (_, r) => {
+        const cashAmt = r.importDirectCashSales + r.importLoanCashRepayments;
+        return (
+          <Tooltip title={`${t("cash")} + ${t("loan_repayment")} (cash)`}>
+            <span className="text-gray-600 font-medium cursor-help border-b border-dashed border-gray-300">
+              {cashAmt.toFixed(2)} TMT
+            </span>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: t("barter_sales"),
+      dataIndex: "exportSales",
+      key: "exportSales",
+      render: (v: number) => (
+        <span className="text-gray-600 font-medium">
+          {Number(v).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("total_revenue"),
+      dataIndex: "totalRevenue",
+      key: "totalRevenue",
+      render: (v: number) => (
+        <span className="text-green-600 font-bold">
+          {Number(v).toFixed(2)} TMT
+        </span>
+      ),
+    },
+    {
+      title: t("net_profit"),
+      dataIndex: "totalProfit",
+      key: "totalProfit",
+      render: (v: number) => (
+        <Tag
+          color={v >= 0 ? "success" : "error"}
+          style={{ borderRadius: 6, fontWeight: "bold" }}
+        >
+          {v >= 0 ? "+" : ""}
+          {Number(v).toFixed(2)} TMT
+        </Tag>
+      ),
+    },
+  ];
 
   // ── Products table columns ───────────────────────────────────────────────
   const productColumns: TableProps<IncomeProduct>["columns"] = [
@@ -161,6 +310,16 @@ const Income = () => {
       ),
     },
     {
+      title: t("warehouse"),
+      dataIndex: "warehouseType",
+      key: "warehouseType",
+      render: (v: string) => (
+        <Tag color={v === "IMPORT" ? "purple" : "cyan"}>
+          {t(v.toLowerCase() + "_warehouse")}
+        </Tag>
+      ),
+    },
+    {
       title: t("client"),
       key: "client",
       render: (_, r) =>
@@ -225,9 +384,12 @@ const Income = () => {
     },
     {
       title: t("order"),
-      dataIndex: "orderId",
-      key: "orderId",
-      render: (id: number) => <Tag color="default">#{id}</Tag>,
+      key: "order",
+      render: (_, r) => (
+        <Tag color="default">
+          #{r.orderId} — {r.orderName}
+        </Tag>
+      ),
     },
     {
       title: t("product"),
@@ -272,9 +434,101 @@ const Income = () => {
         </span>
       ),
     },
+    {
+      title: t("additional_expenses"),
+      dataIndex: "expensesTotal",
+      key: "expensesTotal",
+      render: (v: number) => (
+        <span className="text-orange-500 font-medium">
+          {Number(v).toFixed(2)} TMT
+        </span>
+      ),
+    },
+  ];
+
+  // ── Loan Repayments table columns ────────────────────────────────────────
+  const loanRepaymentColumns: TableProps<IncomeLoanRepayment>["columns"] = [
+    {
+      title: "№",
+      key: "index",
+      width: 55,
+      render: (_: unknown, __: unknown, i: number) => (
+        <span className="text-gray-400 font-medium">{i + 1}</span>
+      ),
+    },
+    {
+      title: t("last_pay_date"),
+      dataIndex: "lastPayDate",
+      key: "lastPayDate",
+      render: (d: string) => (
+        <span className="text-gray-600">
+          {d ? new Date(d).toLocaleDateString() : "—"}
+        </span>
+      ),
+    },
+    {
+      title: t("type"),
+      dataIndex: "type",
+      key: "type",
+      render: (v: string) => (
+        <Tag color={v === "IMPORT" ? "purple" : "cyan"}>
+          {t(v.toLowerCase() + "_warehouse")}
+        </Tag>
+      ),
+    },
+    {
+      title: t("client"),
+      key: "client",
+      render: (_, r) =>
+        r.client ? (isRu ? r.client.ru : r.client.tm) : (
+          <span className="text-gray-400">—</span>
+        ),
+    },
+    {
+      title: t("linked_order"),
+      key: "order",
+      render: (_, r) =>
+        r.purchaseOrderId ? (
+          <Tag color="blue">
+            #{r.purchaseOrderId} — {r.purchaseOrderName}
+          </Tag>
+        ) : (
+          <span className="text-gray-400">—</span>
+        ),
+    },
+    {
+      title: t("paid_amount"),
+      dataIndex: "paidAmount",
+      key: "paidAmount",
+      render: (v: number) => (
+        <span className="text-green-600 font-bold">
+          {Number(v).toFixed(2)} TMT
+        </span>
+      ),
+    },
   ];
 
   const tabs = [
+    {
+      key: "orders",
+      label: (
+        <Space>
+          <FaFileInvoice />
+          {t("order_income")}
+        </Space>
+      ),
+      children: (
+        <Table
+          loading={isLoading}
+          columns={orderColumns}
+          dataSource={data?.orders || []}
+          rowKey="id"
+          size="large"
+          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          className="overflow-x-auto"
+        />
+      ),
+    },
     {
       key: "products",
       label: (
@@ -334,8 +588,28 @@ const Income = () => {
           className="overflow-x-auto"
         />
       ),
-    },
-  ];
+      },
+      {
+        key: "repayments",
+        label: (
+          <Space>
+            <FaMoneyBillTransfer />
+            {t("loan_repayments")}
+          </Space>
+        ),
+        children: (
+          <Table
+            loading={isLoading}
+            columns={loanRepaymentColumns}
+            dataSource={data?.loanRepayments || []}
+            rowKey="id"
+            size="large"
+            pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+            className="overflow-x-auto"
+          />
+        ),
+      },
+    ];
 
   const profit = data?.totalProfit ?? 0;
 

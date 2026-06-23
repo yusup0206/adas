@@ -7,10 +7,42 @@ export interface OrderResponse {
 
 export interface OrderFilters {
   search?: string;
-  page?: string;
-  pageSize?: string;
+  page?: string | number;
+  pageSize?: string | number;
   status?: string;
   isPaid?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface PurchaseOrderExpenses {
+  id: number;
+  purchaseOrderId: number;
+  tax?: number | null;
+  director?: number | null;
+  customs?: number | null;
+  transportation?: number | null;
+  workers?: number | null;
+  stockExchange?: number | null;
+  forensics?: number | null;
+  bank?: number | null;
+  textileMinistry?: number | null;
+  export?: number | null;
+  minusConjugation?: number | null;
+  additionalExpenses?: number | null;
+}
+
+export interface LinkedLoan {
+  id: number;
+  type: "IMPORT" | "EXPORT";
+  status: "OPEN" | "PARTIAL" | "CLOSED";
+  clientId: number;
+  client?: { id: number; name_tm: string; name_ru: string };
+  totalAmount: number;
+  paidAmount: number;
+  lastPayDate?: string | null;
+  note: string;
+  createdAt: string;
 }
 
 export interface Order {
@@ -24,6 +56,8 @@ export interface Order {
   orderDate: string;
   isPaid: boolean;
   items: OrderItem[];
+  expenses?: PurchaseOrderExpenses | null;
+  loans?: LinkedLoan[];
 }
 
 export interface OrderItem {

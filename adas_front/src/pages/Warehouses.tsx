@@ -11,11 +11,12 @@ import {
   useDeleteArrivalMutation,
   useDeleteDispatchMutation,
 } from "@/services/warehouseApi";
-import { Table, Tabs, Tag, Typography } from "antd";
+import { Table, Tabs, Tag, Typography, Modal, Button } from "antd";
+import { EyeOutlined } from "@ant-design/icons";
 import type { TabsProps, TableProps } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { WarehouseType, WarehouseArrival, WarehouseDispatch, WarehouseStockItem } from "@/interfaces/warehouses.interface";
+import type { WarehouseType, WarehouseArrival, WarehouseDispatch, WarehouseStockItem, DispatchGroup } from "@/interfaces/warehouses.interface";
 import dayjs from "dayjs";
 
 const { Text } = Typography;
@@ -34,6 +35,8 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
 
   const [deleteArrival] = useDeleteArrivalMutation();
   const [deleteDispatch] = useDeleteDispatchMutation();
+
+  const [viewProductsGroup, setViewProductsGroup] = useState<DispatchGroup | null>(null);
 
   // ── Stock columns ──────────────────────────────────────────────────────────
   const stockColumns: TableProps<WarehouseStockItem>["columns"] = [
@@ -120,16 +123,57 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
   ];
 
   // ── Dispatch columns ───────────────────────────────────────────────────────
-  const dispatchColumns: TableProps<WarehouseDispatch>["columns"] = [
+  const dispatchColumns: TableProps<DispatchGroup>["columns"] = [
     {
       title: "№",
       render: (_: unknown, __: unknown, i: number) => (dispatchPage - 1) * pageSize + i + 1,
       width: 60,
     },
     {
+      title: t("dispatch_name"),
+      dataIndex: "dispatchName",
+      render: (v: string) => v || "-",
+    },
+    {
       title: t("date"),
       dataIndex: "dispatchDate",
       render: (v: string) => dayjs(v).format("DD.MM.YYYY"),
+    },
+    {
+      title: t("client"),
+      render: (_, r) => {
+        if (!r.client) return "-";
+        return lang === "ru" ? r.client.name_ru : r.client.name_tm;
+      },
+    },
+    {
+      title: t("items"),
+      dataIndex: "itemCount",
+    },
+    {
+      title: t("total_price"),
+      dataIndex: "totalSellPrice",
+      render: (v: number) => `${Number(v).toFixed(2)} TMT`,
+    },
+    {
+      title: t("actions"),
+      render: (_, r) => (
+        <Button
+          type="text"
+          icon={<EyeOutlined />}
+          onClick={() => setViewProductsGroup(r)}
+        />
+      ),
+      width: 80,
+    },
+  ];
+
+  // Inner columns for the products modal
+  const innerDispatchColumns: TableProps<WarehouseDispatch>["columns"] = [
+    {
+      title: "№",
+      render: (_: unknown, __: unknown, i: number) => i + 1,
+      width: 60,
     },
     {
       title: t("product"),
@@ -149,14 +193,6 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
       dataIndex: "totalSellPrice",
       render: (v: number) => `${Number(v).toFixed(2)} TMT`,
     },
-    {
-      title: t("client"),
-      render: (_, r) => {
-        if (!r.client) return "-";
-        return lang === "ru" ? r.client.name_ru : r.client.name_tm;
-      },
-    },
-
     {
       title: t("note"),
       dataIndex: "note",
@@ -236,7 +272,26 @@ const WarehousePanel = ({ warehouseType }: { warehouseType: WarehouseType }) => 
     },
   ];
 
-  return <Tabs defaultActiveKey="stock" items={innerTabs} />;
+  return (
+    <>
+      <Tabs defaultActiveKey="stock" items={innerTabs} />
+      <Modal
+        title={t("view_products")}
+        open={!!viewProductsGroup}
+        onCancel={() => setViewProductsGroup(null)}
+        footer={null}
+        width={800}
+      >
+        <Table
+          columns={innerDispatchColumns}
+          dataSource={viewProductsGroup?.items || []}
+          rowKey="id"
+          size="small"
+          pagination={false}
+        />
+      </Modal>
+    </>
+  );
 };
 
 const Warehouses = () => {

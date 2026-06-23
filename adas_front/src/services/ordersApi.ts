@@ -24,6 +24,8 @@ export const ordersApi = createApi({
           if (filters.status) params.append("status", filters.status);
           if (filters.isPaid !== undefined)
             params.append("isPaid", filters.isPaid.toString());
+          if (filters.dateFrom) params.append("dateFrom", filters.dateFrom);
+          if (filters.dateTo) params.append("dateTo", filters.dateTo);
 
           if (params.toString()) queryString += `?${params.toString()}`;
         }
@@ -70,14 +72,27 @@ export const ordersApi = createApi({
       }),
       invalidatesTags: ["Order"],
     }),
+    upsertOrderExpenses: builder.mutation<any, { id: number; body: Record<string, number | null> }>({
+      query: ({ id, body }) => ({
+        url: `/orders/${id}/expenses`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["Order"],
+    }),
     getSupplierBalance: builder.query<any, number>({
       query: (supplierId) => `/suppliers/${supplierId}/balance`,
     }),
     getDebtSummary: builder.query<
       { totalDebt: number; totalPaid: number; unpaidOrdersCount: number },
-      void
+      { dateFrom?: string; dateTo?: string } | void
     >({
-      query: () => `/orders/debt-summary`,
+      query: (filters) => {
+        const params = new URLSearchParams();
+        if (filters?.dateFrom) params.append("dateFrom", filters.dateFrom);
+        if (filters?.dateTo) params.append("dateTo", filters.dateTo);
+        return `/orders/debt-summary${params.toString() ? `?${params.toString()}` : ''}`;
+      },
       providesTags: ["Order"],
       keepUnusedDataFor: 60,
     }),
@@ -91,6 +106,7 @@ export const {
   useUpdateOrderStatusMutation,
   useDeleteOrderMutation,
   useUpdateOrderMutation,
+  useUpsertOrderExpensesMutation,
   useGetSupplierBalanceQuery,
   useGetDebtSummaryQuery,
 } = ordersApi;

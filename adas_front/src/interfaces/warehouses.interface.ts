@@ -22,8 +22,10 @@ export interface WarehouseArrival {
 export interface WarehouseDispatch {
   id: number;
   warehouseType: WarehouseType;
+  dispatchName: string;
+  dispatchGroupId?: number | null;
   productId: number;
-  product?: { id: number; name_tm: string; name_ru: string };
+  product?: { id: number; name_tm: string; name_ru: string; unit?: { name_tm: string; name_ru: string } | null };
   quantity: number;
   sellPrice: number;
   totalSellPrice: number;
@@ -32,6 +34,17 @@ export interface WarehouseDispatch {
   note: string;
   dispatchDate: string;
   createdAt: string;
+}
+
+/** One row returned by getDispatches — represents a full dispatch (may contain multiple products) */
+export interface DispatchGroup {
+  dispatchGroupId: number;
+  dispatchName: string;
+  dispatchDate: string;
+  client?: { id: number; name_tm: string; name_ru: string } | null;
+  totalSellPrice: number;
+  itemCount: number;
+  items: WarehouseDispatch[];
 }
 
 export interface WarehouseStockItem {
@@ -47,6 +60,12 @@ export interface ArrivalResponse {
   total: number;
 }
 
+export interface DispatchGroupResponse {
+  list: DispatchGroup[];
+  total: number;
+}
+
+/** @deprecated Use DispatchGroupResponse */
 export interface DispatchResponse {
   list: WarehouseDispatch[];
   total: number;
@@ -66,9 +85,12 @@ export interface CreateArrivalValues {
 
 export interface CreateDispatchValues {
   warehouseType: WarehouseType;
+  dispatchName?: string;
   clientId?: number | null;
   note?: string;
   dispatchDate?: string;
+  isLoan?: boolean;
+  purchaseOrderId?: number | null;
   items: {
     productId: number;
     quantity: number;

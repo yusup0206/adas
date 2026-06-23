@@ -85,13 +85,15 @@ export class PurchaseOrderController {
   }
   async getAllOrders(req: Request, res: Response) {
     try {
-      const { search, page, pageSize, status, isPaid } = req.query;
+      const { search, page, pageSize, status, isPaid, dateFrom, dateTo } = req.query;
       const filters = {
         search: search as string,
         page: page ? Number(page) : undefined,
         pageSize: pageSize ? Number(pageSize) : undefined,
         status: status as string,
         isPaid: isPaid === 'true' ? true : isPaid === 'false' ? false : undefined,
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
       };
       const result = await purchaseOrderService.getAllPurchaseOrders(filters);
       res.status(200).json(result);
@@ -103,8 +105,22 @@ export class PurchaseOrderController {
 
   async getDebtSummary(req: Request, res: Response) {
     try {
-      const summary = await purchaseOrderService.getDebtSummary();
+      const { dateFrom, dateTo } = req.query;
+      const summary = await purchaseOrderService.getDebtSummary({
+        dateFrom: dateFrom as string,
+        dateTo: dateTo as string,
+      });
       res.status(200).json(summary);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+  async upsertExpenses(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await purchaseOrderService.upsertExpenses(Number(id), req.body);
+      res.status(200).json(result);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Internal server error' });

@@ -51,9 +51,32 @@ model PurchaseOrder {
   status            OrderStatus         @default(PENDING)
   items             PurchaseOrderItem[]
   warehouseArrivals WarehouseArrival[]
+  warehouseDispatches WarehouseDispatch[]
+  expenses          PurchaseOrderExpenses?
+  loans             Loan[]
   orderDate         DateTime            @default(now())
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+}
+
+model PurchaseOrderExpenses {
+  id                 Int           @id @default(autoincrement())
+  purchaseOrder      PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  purchaseOrderId    Int           @unique
+  tax                Decimal?      @db.Decimal(15, 2)
+  director           Decimal?      @db.Decimal(15, 2)
+  customs            Decimal?      @db.Decimal(15, 2)
+  transportation     Decimal?      @db.Decimal(15, 2)
+  workers            Decimal?      @db.Decimal(15, 2)
+  stockExchange      Decimal?      @db.Decimal(15, 2)
+  forensics          Decimal?      @db.Decimal(15, 2)
+  bank               Decimal?      @db.Decimal(15, 2)
+  textileMinistry    Decimal?      @db.Decimal(15, 2)
+  export             Decimal?      @db.Decimal(15, 2)
+  minusConjugation   Decimal?      @db.Decimal(15, 2)
+  additionalExpenses Decimal?      @db.Decimal(15, 2)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 }
 
 model PurchaseOrderItem {
@@ -75,8 +98,39 @@ model Client {
   address_ru           String              @default("")
   warehouseArrivals    WarehouseArrival[]
   warehouseDispatches  WarehouseDispatch[]
+  loans                Loan[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
+}
+
+enum LoanType {
+  IMPORT
+  EXPORT
+}
+
+enum LoanStatus {
+  OPEN
+  PARTIAL
+  CLOSED
+}
+
+model Loan {
+  id               Int            @id @default(autoincrement())
+  type             LoanType
+  status           LoanStatus     @default(OPEN)
+  client           Client         @relation(fields: [clientId], references: [id])
+  clientId         Int
+  totalAmount      Decimal        @db.Decimal(15, 2)
+  paidAmount       Decimal        @default(0) @db.Decimal(15, 2)
+  lastPayDate      DateTime?
+  note             String         @default("")
+  dispatchId       Int?
+  dispatchGroupId  Int?
+  dispatchName     String         @default("")
+  purchaseOrder    PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId  Int?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model Measurement {
@@ -114,19 +168,23 @@ model WarehouseArrival {
 }
 
 model WarehouseDispatch {
-  id             Int           @id @default(autoincrement())
-  warehouseType  WarehouseType
-  product        Product       @relation(fields: [productId], references: [id])
-  productId      Int
-  quantity       Int
-  sellPrice      Decimal       @default(0) @db.Decimal(15, 2)
-  totalSellPrice Decimal       @default(0) @db.Decimal(15, 2)
-  client         Client?       @relation(fields: [clientId], references: [id])
-  clientId       Int?
-  note           String        @default("")
-  dispatchDate   DateTime      @default(now())
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id              Int           @id @default(autoincrement())
+  warehouseType   WarehouseType
+  dispatchName    String        @default("")
+  dispatchGroupId Int?
+  product         Product       @relation(fields: [productId], references: [id])
+  productId       Int
+  quantity        Int
+  sellPrice       Decimal       @default(0) @db.Decimal(15, 2)
+  totalSellPrice  Decimal       @default(0) @db.Decimal(15, 2)
+  client          Client?       @relation(fields: [clientId], references: [id])
+  clientId        Int?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId Int?
+  note            String        @default("")
+  dispatchDate    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model User {

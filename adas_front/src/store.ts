@@ -11,6 +11,7 @@ import { authApi } from "./services/authApi";
 import { usersApi } from "./services/usersApi";
 import { rolesApi } from "./services/rolesApi";
 import { permissionsApi } from "./services/permissionsApi";
+import { loansApi } from "./services/loansApi";
 import authReducer from "./store/slices/authSlice";
 
 export const store = configureStore({
@@ -26,6 +27,7 @@ export const store = configureStore({
     [usersApi.reducerPath]: usersApi.reducer,
     [rolesApi.reducerPath]: rolesApi.reducer,
     [permissionsApi.reducerPath]: permissionsApi.reducer,
+    [loansApi.reducerPath]: loansApi.reducer,
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
@@ -41,6 +43,7 @@ export const store = configureStore({
       usersApi.middleware,
       rolesApi.middleware,
       permissionsApi.middleware,
+      loansApi.middleware,
     ),
 });
 

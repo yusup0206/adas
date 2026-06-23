@@ -1,4 +1,4 @@
 node_modules\n.env\ndist\n
 .env
-
+dist
 node_modules

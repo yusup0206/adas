@@ -5,7 +5,7 @@ import type {
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query';
 import { logout, setCredentials } from '../store/slices/authSlice';
-import { RootState } from '../store';
+import type { RootState } from "../store/store";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_APP_BASE_URL || '/api',

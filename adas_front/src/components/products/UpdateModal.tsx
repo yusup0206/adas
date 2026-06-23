@@ -1,7 +1,7 @@
 import type { Product, ProductValues } from "@/interfaces/products.interface";
 import { useUpdateProductMutation } from "@/services/productsApi";
 import { useGetUnitsQuery } from "@/services/unitsApi";
-import { App, Button, Form, Input, Modal, Select, InputNumber } from "antd";
+import { App, Button, Form, Input, Modal, Select } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiPencilFill } from "react-icons/ri";

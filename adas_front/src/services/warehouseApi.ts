@@ -3,7 +3,7 @@ import { baseQueryWithReauth } from './baseQueryWithReauth';
 import type {
   WarehouseStockItem,
   ArrivalResponse,
-  DispatchResponse,
+  DispatchGroupResponse,
   CreateArrivalValues,
   CreateDispatchValues,
   WarehouseType,
@@ -12,7 +12,7 @@ import type {
 export const warehouseApi = createApi({
   reducerPath: 'warehouseApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['WStock', 'WArrival', 'WDispatch'],
+  tagTypes: ['WStock', 'WArrival', 'WDispatch', 'Order'],
   endpoints: (builder) => ({
     getStock: builder.query<WarehouseStockItem[], { type: WarehouseType }>({
       query: ({ type }) => `/warehouse/stock?type=${type}`,
@@ -31,14 +31,14 @@ export const warehouseApi = createApi({
       query: (id) => ({ url: `/warehouse/arrivals/${id}`, method: 'DELETE' }),
       invalidatesTags: ['WArrival', 'WStock'],
     }),
-    getDispatches: builder.query<DispatchResponse, { type: WarehouseType; page?: number; pageSize?: number }>({
+    getDispatches: builder.query<DispatchGroupResponse, { type: WarehouseType; page?: number; pageSize?: number }>({
       query: ({ type, page = 1, pageSize = 10 }) =>
         `/warehouse/dispatches?type=${type}&page=${page}&pageSize=${pageSize}`,
       providesTags: ['WDispatch'],
     }),
     createDispatch: builder.mutation<void, CreateDispatchValues>({
       query: (body) => ({ url: '/warehouse/dispatches', method: 'POST', body }),
-      invalidatesTags: ['WDispatch', 'WStock'],
+      invalidatesTags: ['WDispatch', 'WStock', 'Order'],
     }),
     deleteDispatch: builder.mutation<void, number>({
       query: (id) => ({ url: `/warehouse/dispatches/${id}`, method: 'DELETE' }),
