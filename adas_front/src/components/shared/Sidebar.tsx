@@ -14,7 +14,9 @@ const Sidebar = ({ onClose }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>(
+    {},
+  );
   const user = useSelector((state: RootState) => state.auth.user);
 
   const toggleDropdown = (key: string) => {
@@ -28,7 +30,7 @@ const Sidebar = ({ onClose }: SidebarProps) => {
 
   return (
     <div className="w-full h-screen flex flex-col border-r border-borderColor bg-bgColor">
-      <div className="w-full h-[89px] p-4 flex items-center justify-between gap-4 border-b border-borderColor">
+      <div className="w-full h-[97px] p-4 flex items-center justify-between gap-4 border-b border-borderColor">
         <img
           src="/assets/images/logo2.png"
           alt="logo"
@@ -40,7 +42,9 @@ const Sidebar = ({ onClose }: SidebarProps) => {
         <div className="w-full h-full flex flex-col gap-2">
           {sidebarData.sidebarElements.map((item, index) => {
             if (item.children) {
-              const visibleChildren = item.children.filter((child: any) => hasPermission(child.permission));
+              const visibleChildren = item.children.filter((child: any) =>
+                hasPermission(child.permission),
+              );
               if (visibleChildren.length === 0) return null;
 
               const isOpen = openDropdowns[item.labelKey];
@@ -52,9 +56,15 @@ const Sidebar = ({ onClose }: SidebarProps) => {
                   >
                     <div className="flex items-center justify-start gap-2">
                       {item.icon}
-                      <h5 className="text-base font-semibold">{t(item.labelKey)}</h5>
+                      <h5 className="text-base font-semibold">
+                        {t(item.labelKey)}
+                      </h5>
                     </div>
-                    {isOpen ? <FaChevronUp className="size-3" /> : <FaChevronDown className="size-3" />}
+                    {isOpen ? (
+                      <FaChevronUp className="size-3" />
+                    ) : (
+                      <FaChevronDown className="size-3" />
+                    )}
                   </button>
                   {isOpen && (
                     <div className="flex flex-col gap-1 pl-4">
@@ -72,7 +82,9 @@ const Sidebar = ({ onClose }: SidebarProps) => {
                           }
                         >
                           {child.icon}
-                          <h5 className="text-sm font-medium">{t(child.labelKey)}</h5>
+                          <h5 className="text-sm font-medium">
+                            {t(child.labelKey)}
+                          </h5>
                         </button>
                       ))}
                     </div>

@@ -1,3 +1,4 @@
+import React from "react";
 import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
@@ -377,14 +378,65 @@ const Income = () => {
     },
   ];
 
-  // ── Purchases table columns ──────────────────────────────────────────────
-  const purchaseColumns: TableProps<IncomePurchase>["columns"] = [
+  // ── Grouped Purchases table (one row per order, expandable products) ──────
+  interface PurchaseOrderGroup {
+    key: string;
+    orderId: number;
+    orderName: string;
+    date: string;
+    supplier: { tm: string; ru: string } | null;
+    itemsCount: number;
+    totalQty: number;
+    itemsCost: number;
+    expensesTotal: number;
+    grandTotal: number;
+    items: IncomePurchase[];
+  }
+
+  const purchaseGroups: PurchaseOrderGroup[] = React.useMemo(() => {
+    const map = new Map<number, PurchaseOrderGroup>();
+    (data?.purchases || []).forEach((p) => {
+      const existing = map.get(p.orderId);
+      if (existing) {
+        existing.itemsCount += 1;
+        existing.totalQty += p.quantity;
+        existing.itemsCost += p.totalCost;
+        existing.expensesTotal += p.expensesTotal;
+        existing.grandTotal += p.totalCost + p.expensesTotal;
+        existing.items.push(p);
+      } else {
+        map.set(p.orderId, {
+          key: String(p.orderId),
+          orderId: p.orderId,
+          orderName: p.orderName,
+          date: p.date,
+          supplier: p.supplier,
+          itemsCount: 1,
+          totalQty: p.quantity,
+          itemsCost: p.totalCost,
+          expensesTotal: p.expensesTotal,
+          grandTotal: p.totalCost + p.expensesTotal,
+          items: [p],
+        });
+      }
+    });
+    return Array.from(map.values());
+  }, [data?.purchases]);
+
+  const purchaseGroupColumns: TableProps<PurchaseOrderGroup>["columns"] = [
     {
       title: "№",
       key: "index",
       width: 55,
       render: (_: unknown, __: unknown, i: number) => (
         <span className="text-gray-400 font-medium">{i + 1}</span>
+      ),
+    },
+    {
+      title: t("order"),
+      key: "order",
+      render: (_, r) => (
+        <Tag color="blue">#{r.orderId} — {r.orderName}</Tag>
       ),
     },
     {
@@ -396,10 +448,54 @@ const Income = () => {
       ),
     },
     {
-      title: t("order"),
-      key: "order",
-      render: (_, r) => <Tag color="default">{r.orderName}</Tag>,
+      title: t("supplier"),
+      key: "supplier",
+      render: (_, r) =>
+        r.supplier ? (
+          isRu ? r.supplier.ru : r.supplier.tm
+        ) : (
+          <span className="text-gray-400">—</span>
+        ),
     },
+    {
+      title: t("products"),
+      key: "itemsCount",
+      render: (_, r) => (
+        <Tag color="processing" style={{ borderRadius: 6 }}>
+          {r.itemsCount} {t("items")}
+        </Tag>
+      ),
+    },
+    {
+      title: t("purchase_cost"),
+      key: "itemsCost",
+      render: (_, r) => (
+        <span className="text-red-500 font-semibold">
+          {Number(r.itemsCost).toFixed(2)} $
+        </span>
+      ),
+    },
+    {
+      title: t("additional_expenses"),
+      key: "expensesTotal",
+      render: (_, r) => (
+        <span className="text-orange-500 font-medium">
+          {Number(r.expensesTotal).toFixed(2)} $
+        </span>
+      ),
+    },
+    {
+      title: t("total_cost"),
+      key: "grandTotal",
+      render: (_, r) => (
+        <span className="text-red-600 font-bold">
+          {Number(r.grandTotal).toFixed(2)} $
+        </span>
+      ),
+    },
+  ];
+
+  const purchaseItemColumns: TableProps<IncomePurchase>["columns"] = [
     {
       title: t("product"),
       key: "product",
@@ -410,27 +506,11 @@ const Income = () => {
       ),
     },
     {
-      title: t("supplier"),
-      key: "supplier",
-      render: (_, r) =>
-        r.supplier ? (
-          isRu ? (
-            r.supplier.ru
-          ) : (
-            r.supplier.tm
-          )
-        ) : (
-          <span className="text-gray-400">—</span>
-        ),
-    },
-    {
       title: t("quantity"),
       dataIndex: "quantity",
       key: "quantity",
       render: (v: number) => (
-        <Tag color="default" style={{ borderRadius: 6 }}>
-          {v}
-        </Tag>
+        <Tag color="default" style={{ borderRadius: 6 }}>{v}</Tag>
       ),
     },
     {
@@ -599,12 +679,25 @@ const Income = () => {
       children: (
         <Table
           loading={isLoading}
-          columns={purchaseColumns}
-          dataSource={data?.purchases || []}
-          rowKey="id"
+          columns={purchaseGroupColumns}
+          dataSource={purchaseGroups}
+          rowKey="key"
           size="large"
           pagination={{ position: ["bottomCenter"], pageSize: 10 }}
           className="overflow-x-auto"
+          expandable={{
+            expandedRowRender: (record) => (
+              <Table
+                columns={purchaseItemColumns}
+                dataSource={record.items}
+                rowKey="id"
+                size="small"
+                pagination={false}
+                className="ml-8"
+              />
+            ),
+            rowExpandable: (record) => record.items.length > 0,
+          }}
         />
       ),
     },
