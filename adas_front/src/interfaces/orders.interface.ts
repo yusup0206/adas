@@ -58,6 +58,7 @@ export interface Order {
   items: OrderItem[];
   expenses?: PurchaseOrderExpenses | null;
   loans?: LinkedLoan[];
+  warehouseArrivals?: { productId: number; quantity: number }[];
 }
 
 export interface OrderItem {

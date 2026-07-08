@@ -64,7 +64,12 @@ export class PurchaseOrderService {
     });
   }
 
-  async updateOrderStatus(orderId: number, status: OrderStatus) {
+  async updateOrderStatus(
+    orderId: number,
+    status: OrderStatus,
+    arrivalDate: Date,
+    partialItems?: { productId: number; quantity: number }[],
+  ) {
     return await prisma.$transaction(async (tx) => {
       const order = await tx.purchaseOrder.findUnique({
         where: { id: orderId },
@@ -83,12 +88,43 @@ export class PurchaseOrderService {
           supplierId: order.supplierId,
           purchaseOrderId: order.id,
           note: `Auto-arrived from Order ${order.orderName}`,
-          arrivalDate: new Date(),
+          arrivalDate,
           createdAt: new Date(),
           updatedAt: new Date(),
         }));
-
         await tx.warehouseArrival.createMany({ data: arrivalData });
+      }
+
+      // For HALF_ARRIVED: only create arrivals for the specified partial items
+      if (status === 'HALF_ARRIVED' && partialItems && partialItems.length > 0) {
+        // Build a map of productId -> unitPrice from the order items
+        const priceMap = new Map(
+          order.items.map((item) => [item.productId, item.unitPrice]),
+        );
+
+        const arrivalData = partialItems
+          .filter((pi) => priceMap.has(pi.productId) && pi.quantity > 0)
+          .map((pi) => {
+            const unitPrice = priceMap.get(pi.productId)!;
+            const totalPrice = new Prisma.Decimal(unitPrice).times(pi.quantity);
+            return {
+              warehouseType: 'IMPORT' as const,
+              productId: pi.productId,
+              quantity: pi.quantity,
+              unitPrice,
+              totalPrice,
+              supplierId: order.supplierId,
+              purchaseOrderId: order.id,
+              note: `Partial arrival from Order ${order.orderName}`,
+              arrivalDate,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+          });
+
+        if (arrivalData.length > 0) {
+          await tx.warehouseArrival.createMany({ data: arrivalData });
+        }
       }
 
       return await tx.purchaseOrder.update({
@@ -121,11 +157,84 @@ export class PurchaseOrderService {
     });
   }
 
-  async updateOrder(orderId: number, data: { orderName?: string; totalPrice?: number; status?: OrderStatus }) {
-    // Basic update logic, adjusting items might be complex and require a separate endpoint
-    return await prisma.purchaseOrder.update({
-      where: { id: orderId },
-      data,
+  async updateOrder(
+    orderId: number,
+    data: {
+      orderName?: string;
+      supplierId?: number;
+      totalPrice?: number;
+      status?: OrderStatus;
+      items?: { productId: number; quantity: number; unitPrice: number }[];
+    },
+  ) {
+    return await prisma.$transaction(async (tx) => {
+      // Fetch current order to compute balance diff
+      const existing = await tx.purchaseOrder.findUnique({
+        where: { id: orderId },
+      });
+      if (!existing) throw new Error('Order not found');
+
+      const oldTotal = Number(existing.totalPrice);
+      const newTotal = data.totalPrice !== undefined ? Number(data.totalPrice) : oldTotal;
+      const totalDiff = newTotal - oldTotal;
+
+      const oldSupplierId = existing.supplierId;
+      const newSupplierId = data.supplierId ?? oldSupplierId;
+
+      // If items are provided, delete old items and insert the new ones
+      if (data.items && data.items.length > 0) {
+        await tx.purchaseOrderItem.deleteMany({ where: { purchaseOrderId: orderId } });
+        await tx.purchaseOrderItem.createMany({
+          data: data.items.map((item) => ({
+            purchaseOrderId: orderId,
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.quantity * item.unitPrice,
+          })),
+        });
+      }
+
+      // Update the order itself
+      const updated = await tx.purchaseOrder.update({
+        where: { id: orderId },
+        data: {
+          ...(data.orderName !== undefined && { orderName: data.orderName }),
+          ...(data.supplierId !== undefined && { supplierId: data.supplierId }),
+          ...(data.totalPrice !== undefined && { totalPrice: data.totalPrice }),
+          ...(data.status !== undefined && { status: data.status }),
+        },
+      });
+
+      // Adjust supplier balance(s)
+      if (oldSupplierId !== newSupplierId) {
+        // Supplier changed: remove old supplier's contribution, add to new supplier
+        await tx.supplier.update({
+          where: { id: oldSupplierId },
+          data: {
+            totalAmount: { decrement: oldTotal },
+            remainingDebt: { decrement: new Prisma.Decimal(oldTotal).minus(existing.paidAmount) },
+          },
+        });
+        await tx.supplier.update({
+          where: { id: newSupplierId },
+          data: {
+            totalAmount: { increment: newTotal },
+            remainingDebt: { increment: newTotal },
+          },
+        });
+      } else if (totalDiff !== 0) {
+        // Same supplier, just adjust the diff
+        await tx.supplier.update({
+          where: { id: oldSupplierId },
+          data: {
+            totalAmount: { increment: totalDiff },
+            remainingDebt: { increment: totalDiff },
+          },
+        });
+      }
+
+      return updated;
     });
   }
 
@@ -164,6 +273,7 @@ export class PurchaseOrderService {
               product: true,
             },
           },
+          warehouseArrivals: true,
         },
         orderBy: {
           createdAt: 'desc',

@@ -40,11 +40,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_CLIENTS"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Clients />
             </RequirePermission>
@@ -55,11 +51,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_PRODUCTS"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Units />
             </RequirePermission>
@@ -70,11 +62,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_PRODUCTS"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Products />
             </RequirePermission>
@@ -85,11 +73,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_ORDERS"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Orders />
             </RequirePermission>
@@ -100,11 +84,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_SUPPLIERS"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Suppliers />
             </RequirePermission>
@@ -115,11 +95,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="VIEW_INCOME"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Income />
             </RequirePermission>
@@ -130,11 +106,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_WAREHOUSE"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Warehouses />
             </RequirePermission>
@@ -145,11 +117,7 @@ function Router() {
           element: (
             <RequirePermission
               permission={["MANAGE_WAREHOUSE", "VIEW_INCOME"]}
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Debt />
             </RequirePermission>
@@ -160,11 +128,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_USERS"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Users />
             </RequirePermission>
@@ -175,11 +139,7 @@ function Router() {
           element: (
             <RequirePermission
               permission="MANAGE_ROLES"
-              fallback={
-                <div className="p-8 text-center text-red-500 font-bold">
-                  Access Denied
-                </div>
-              }
+              fallback={<Navigate to="/login" />}
             >
               <Roles />
             </RequirePermission>

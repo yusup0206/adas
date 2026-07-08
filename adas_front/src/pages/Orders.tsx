@@ -144,10 +144,7 @@ const Orders = () => {
             onDelete={async (id) => await deleteOrder(Number(id)).unwrap()}
           />
           {record.status !== "RECEIVED" && (
-            <UpdateStatusModal
-              orderId={record.id}
-              currentStatus={record.status}
-            />
+            <UpdateStatusModal record={record} />
           )}
         </div>
       ),

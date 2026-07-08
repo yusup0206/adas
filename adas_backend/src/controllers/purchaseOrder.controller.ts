@@ -42,8 +42,14 @@ export class PurchaseOrderController {
   async updateOrderStatus(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { status } = req.body;
-      const result = await purchaseOrderService.updateOrderStatus(Number(id), status);
+      const { status, arrivalDate, partialItems } = req.body;
+      const parsedDate = arrivalDate ? new Date(arrivalDate) : new Date();
+      const result = await purchaseOrderService.updateOrderStatus(
+        Number(id),
+        status,
+        parsedDate,
+        partialItems,
+      );
       res.status(200).json(result);
     } catch (error) {
       console.error(error);

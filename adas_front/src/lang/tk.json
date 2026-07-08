@@ -210,5 +210,11 @@
   "cash_sales": "Nagt satyşlar",
   "barter_sales": "Barter satyşlar",
   "net_profit": "Arassa peýda",
-  "unlinked_transactions": "Göni / baglanmadyk amallar"
+  "unlinked_transactions": "Göni / baglanmadyk amallar",
+  "half_arrived": "Bölekleýin alyndy",
+  "arrival_date": "Gelip çykan senesi",
+  "select_arrived_products": "Gelen harytlary saýlaň",
+  "arrived_quantity": "Gelen mukdary",
+  "select_at_least_one_product": "Azyndan bir haryt saýlaň",
+  "HALF_ARRIVED": "Bölekleýin alyndy"
 }

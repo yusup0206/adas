@@ -210,5 +210,11 @@
   "cash_sales": "Наличные продажи",
   "barter_sales": "Продажи по бартеру",
   "net_profit": "Чистая прибыль",
-  "unlinked_transactions": "Прямые / несвязанные операции"
+  "unlinked_transactions": "Прямые / несвязанные операции",
+  "half_arrived": "Частично получено",
+  "arrival_date": "Дата прибытия",
+  "select_arrived_products": "Выберите прибывшие товары",
+  "arrived_quantity": "Прибывшее кол-во",
+  "select_at_least_one_product": "Выберите хотя бы один товар",
+  "HALF_ARRIVED": "Частично получен"
 }

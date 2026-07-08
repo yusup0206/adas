@@ -59,11 +59,19 @@ export const ordersApi = createApi({
         dispatch(incomeApi.util.invalidateTags(["Income"]));
       },
     }),
-    updateOrderStatus: builder.mutation<any, { orderId: number; status: string }>({
-      query: ({ orderId, status }) => ({
+    updateOrderStatus: builder.mutation<
+      any,
+      {
+        orderId: number;
+        status: string;
+        arrivalDate: string;
+        partialItems?: { productId: number; quantity: number }[];
+      }
+    >({
+      query: ({ orderId, status, arrivalDate, partialItems }) => ({
         url: `/orders/${orderId}/status`,
         method: "PATCH",
-        body: { status },
+        body: { status, arrivalDate, partialItems },
       }),
       invalidatesTags: ["Order"],
     }),

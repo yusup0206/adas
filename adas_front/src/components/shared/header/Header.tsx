@@ -1,4 +1,4 @@
-import { IoMenu, IoLogOut, IoChevronDown } from "react-icons/io5";
+import { IoMenu, IoLogOut } from "react-icons/io5";
 import { MdLanguage } from "react-icons/md";
 import LangModal from "./LangModal";
 import { useState } from "react";
@@ -105,14 +105,13 @@ const Header = ({ title }: MainHeaderProps) => {
               <div className="size-9 overflow-hidden rounded-full bg-linear-to-tr from-primary to-blue-500 flex items-center justify-center text-white font-bold shadow-sm group-hover:scale-105 transition-transform duration-300">
                 {user?.username?.[0]?.toUpperCase() || "U"}
               </div>
-              {/* <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-bgColor" /> */}
             </div>
-            {user && (
+            {/* {user && (
               <span className="text-textColor font-medium hidden sm:block select-none group-hover:text-primary transition-colors duration-300">
                 {user.username}
               </span>
             )}
-            <IoChevronDown className="text-textColor/50 group-hover:text-textColor transition-colors duration-300 size-3.5 hidden sm:block" />
+            <IoChevronDown className="text-textColor/50 group-hover:text-textColor transition-colors duration-300 size-3.5 hidden sm:block" /> */}
           </div>
         </Dropdown>
       </div>
