@@ -136,6 +136,34 @@ export class WarehouseService {
     return { list, total };
   }
 
+  async getDispatchById(dispatchGroupId: number) {
+    const items = await prisma.warehouseDispatch.findMany({
+      where: {
+        OR: [
+          { dispatchGroupId },
+          { id: dispatchGroupId } // For legacy fallback
+        ]
+      },
+      include: { product: { include: { unit: true } }, client: true },
+      orderBy: { dispatchDate: 'desc' },
+    });
+
+    if (!items.length) {
+      throw new Error('Dispatch not found');
+    }
+
+    const first = items[0];
+    return {
+      dispatchGroupId: dispatchGroupId,
+      dispatchName: first.dispatchName || '',
+      dispatchDate: first.dispatchDate,
+      client: first.client || null,
+      totalSellPrice: items.reduce((sum, d) => sum + Number(d.totalSellPrice), 0),
+      itemCount: items.length,
+      items,
+    };
+  }
+
   async createDispatch(data: {
     warehouseType: WarehouseType;
     dispatchName?: string;

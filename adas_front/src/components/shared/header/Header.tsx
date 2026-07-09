@@ -1,4 +1,4 @@
-import { IoMenu, IoLogOut } from "react-icons/io5";
+import { IoMenu, IoLogOut, IoArrowBack } from "react-icons/io5";
 import { MdLanguage } from "react-icons/md";
 import LangModal from "./LangModal";
 import { useState } from "react";
@@ -14,9 +14,10 @@ import { useTranslation } from "react-i18next";
 
 interface MainHeaderProps {
   title: string;
+  goBack?: boolean;
 }
 
-const Header = ({ title }: MainHeaderProps) => {
+const Header = ({ title, goBack }: MainHeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -89,6 +90,15 @@ const Header = ({ title }: MainHeaderProps) => {
             icon={<IoMenu />}
           />
         </div>
+        {goBack && (
+          <Button
+            onClick={() => navigate(-1)}
+            type="default"
+            size="large"
+            icon={<IoArrowBack />}
+          />
+        )}
+
         <h1 className="text-headerColor text-xl md:text-2xl font-semibold">
           {title}
         </h1>
@@ -98,9 +108,10 @@ const Header = ({ title }: MainHeaderProps) => {
           menu={{ items: menuItems }}
           trigger={["click"]}
           placement="bottomRight"
-          overlayClassName="min-w-[160px]"
+          overlayClassName="min-w-[200px]"
+          className="min-w-[200px]"
         >
-          <div className="flex items-center gap-2.5 cursor-pointer group hover:bg-gray-100 dark:hover:bg-white/5 px-2.5 py-1.5 rounded-full transition-all duration-300">
+          <div className="flex items-center justify-end gap-2.5 cursor-pointer group hover:bg-gray-100 dark:hover:bg-white/5 px-2.5 py-1.5 rounded-full transition-all duration-300">
             <div className="relative">
               <div className="size-9 overflow-hidden rounded-full bg-linear-to-tr from-primary to-blue-500 flex items-center justify-center text-white font-bold shadow-sm group-hover:scale-105 transition-transform duration-300">
                 {user?.username?.[0]?.toUpperCase() || "U"}

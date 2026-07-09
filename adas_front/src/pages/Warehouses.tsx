@@ -2,7 +2,7 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import DeleteModal from "@/components/shared/DeleteModal";
-import CreateArrivalModal from "@/components/warehouse/CreateArrivalModal";
+// import CreateArrivalModal from "@/components/warehouse/CreateArrivalModal";
 import CreateDispatchModal from "@/components/warehouse/CreateDispatchModal";
 import {
   useGetStockQuery,
@@ -24,6 +24,8 @@ import type {
   DispatchGroup,
 } from "@/interfaces/warehouses.interface";
 import dayjs from "dayjs";
+import { IoDocumentAttach } from "react-icons/io5";
+import { Link } from "react-router-dom";
 
 const { Text } = Typography;
 
@@ -189,11 +191,16 @@ const WarehousePanel = ({
     {
       title: t("actions"),
       render: (_, r) => (
-        <Button
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => setViewProductsGroup(r)}
-        />
+        <div className="flex items-center gap-4">
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => setViewProductsGroup(r)}
+          />
+          <Link to={`/dispatch-waybill/${r.dispatchGroupId}`}>
+            <Button type="text" icon={<IoDocumentAttach />} />
+          </Link>
+        </div>
       ),
       width: 80,
     },

@@ -7,6 +7,7 @@ import RequirePermission from "@/components/RequirePermission";
 import Loader from "@/components/shared/Loader";
 
 // pages
+const Login = lazy(() => import("@/pages/Login"));
 const Clients = lazy(() => import("@/pages/Clients"));
 const Units = lazy(() => import("@/pages/Units"));
 const Products = lazy(() => import("@/pages/Products"));
@@ -17,7 +18,7 @@ const Warehouses = lazy(() => import("@/pages/Warehouses"));
 const Debt = lazy(() => import("@/pages/Debt"));
 const Users = lazy(() => import("@/pages/Users"));
 const Roles = lazy(() => import("@/pages/Roles"));
-const Login = lazy(() => import("@/pages/Login"));
+const DispatchWaybill = lazy(() => import("@/pages/DispatchWaybill"));
 
 function Router() {
   const routes = useRoutes([
@@ -145,10 +146,21 @@ function Router() {
             </RequirePermission>
           ),
         },
+        {
+          path: "dispatch-waybill/:id",
+          element: (
+            <RequirePermission
+              permission="MANAGE_WAREHOUSE"
+              fallback={<Navigate to="/login" />}
+            >
+              <DispatchWaybill />
+            </RequirePermission>
+          ),
+        },
       ],
     },
 
-    { path: "*", element: <Navigate to="/clients" replace /> },
+    { path: "*", element: <Navigate to="/income" replace /> },
   ]);
 
   return routes;

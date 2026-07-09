@@ -105,6 +105,20 @@ export class WarehouseController {
     }
   }
 
+  async getDispatchById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const result = await warehouseService.getDispatchById(Number(id));
+      res.json(result);
+    } catch (error: any) {
+      console.error(error);
+      if (error.message === 'Dispatch not found') {
+        return res.status(404).json({ message: error.message });
+      }
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
   async createDispatch(req: Request, res: Response) {
     try {
       const data = DispatchSchema.parse(req.body);

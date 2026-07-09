@@ -216,5 +216,8 @@
   "select_arrived_products": "Gelen harytlary saýlaň",
   "arrived_quantity": "Gelen mukdary",
   "select_at_least_one_product": "Azyndan bir haryt saýlaň",
-  "HALF_ARRIVED": "Bölekleýin alyndy"
+  "HALF_ARRIVED": "Bölekleýin alyndy",
+  "exporting": "Faýl taýýarlanýar...",
+  "downloaded": "Faýl ýükläp alyndy",
+  "exportError": "Faýly ýüklemekde ýalňyşlyk ýüze çykdy"
 }

@@ -1,4 +1,4 @@
-export type WarehouseType = 'IMPORT' | 'EXPORT';
+export type WarehouseType = "IMPORT" | "EXPORT";
 
 export interface WarehouseArrival {
   id: number;
@@ -25,7 +25,12 @@ export interface WarehouseDispatch {
   dispatchName: string;
   dispatchGroupId?: number | null;
   productId: number;
-  product?: { id: number; name_tm: string; name_ru: string; unit?: { name_tm: string; name_ru: string } | null };
+  product?: {
+    id: number;
+    name_tm: string;
+    name_ru: string;
+    unit?: { name_tm: string; name_ru: string } | null;
+  };
   quantity: number;
   sellPrice: number;
   totalSellPrice: number;
@@ -36,7 +41,6 @@ export interface WarehouseDispatch {
   createdAt: string;
 }
 
-/** One row returned by getDispatches — represents a full dispatch (may contain multiple products) */
 export interface DispatchGroup {
   dispatchGroupId: number;
   dispatchName: string;
@@ -49,7 +53,12 @@ export interface DispatchGroup {
 
 export interface WarehouseStockItem {
   productId: number;
-  product?: { id: number; name_tm: string; name_ru: string; unit?: { name_tm: string; name_ru: string } | null };
+  product?: {
+    id: number;
+    name_tm: string;
+    name_ru: string;
+    unit?: { name_tm: string; name_ru: string } | null;
+  };
   totalArrived: number;
   totalDispatched: number;
   currentStock: number;

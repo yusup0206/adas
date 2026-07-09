@@ -87,6 +87,7 @@ app.get('/api/warehouse/arrivals', authenticateToken, requirePermission('MANAGE_
 app.post('/api/warehouse/arrivals', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.createArrival(req, res));
 app.delete('/api/warehouse/arrivals/:id', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.deleteArrival(req, res));
 app.get('/api/warehouse/dispatches', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.getDispatches(req, res));
+app.get('/api/warehouse/dispatches/:id', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.getDispatchById(req, res));
 app.post('/api/warehouse/dispatches', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.createDispatch(req, res));
 app.delete('/api/warehouse/dispatches/:id', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.deleteDispatch(req, res));
 
