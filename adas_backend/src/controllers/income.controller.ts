@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prismaClient';
+import { evaluateFormula } from './expenseFormula.controller';
 
 export class IncomeController {
   async getIncomeSummary(req: Request, res: Response) {
     try {
       // ── Run queries in PARALLEL ───────────────────────────────────────────
-      const [orders, allDispatches, allLoans, allExportArrivals] = await Promise.all([
+      const [orders, allDispatches, allLoans, allExportArrivals, formulaRows] = await Promise.all([
         prisma.purchaseOrder.findMany({
           include: {
             supplier: { select: { name_tm: true, name_ru: true } },
@@ -35,7 +36,11 @@ export class IncomeController {
         prisma.warehouseArrival.findMany({
           where: { warehouseType: 'EXPORT' },
         }),
+        prisma.expenseFormula.findMany(),
       ]);
+
+      // Build formula lookup map  key → formula string
+      const formulaMap = new Map<string, string>(formulaRows.map((f) => [f.key, f.formula]));
 
       // Map loan IDs that are associated with dispatches to determine if cash/loan
       const loanDispatchIds = new Set(allLoans.map((l) => l.dispatchId).filter(Boolean));
@@ -43,23 +48,25 @@ export class IncomeController {
       // ── Calculate Order-Centric Summary ───────────────────────────────────
       const ordersSummary = orders.map((order) => {
         const itemsCost = order.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+        const totalItemQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
 
-        // Additional expenses
-        const expenses = order.expenses;
+        // Additional expenses — per-order values take priority; fall back to global formula
+        const expenses = order.expenses?.expenses as Record<string, number> | undefined;
         let expensesTotal = 0;
         const expensesBreakdown: Record<string, number> = {};
-        if (expenses) {
-          const expenseFields = [
-            'tax', 'director', 'customs', 'transportation', 'workers',
-            'stockExchange', 'forensics', 'bank', 'textileMinistry',
-            'export', 'minusConjugation', 'additionalExpenses',
-          ];
-          expenseFields.forEach((key) => {
-            const val = Number((expenses as any)[key] ?? 0);
-            expensesBreakdown[key] = isNaN(val) ? 0 : val;
-            expensesTotal += isNaN(val) ? 0 : val;
-          });
-        }
+        
+        // Use all available keys from both global formulas and per-order overrides
+        const allKeys = new Set([...formulaMap.keys(), ...(expenses ? Object.keys(expenses) : [])]);
+        
+        allKeys.forEach((key) => {
+          const storedVal = expenses ? Number(expenses[key] ?? 0) : 0;
+          const effectiveVal =
+            !isNaN(storedVal) && storedVal !== 0
+              ? storedVal // manual per-order override
+              : evaluateFormula(formulaMap.get(key) ?? '0', totalItemQuantity); // global formula fallback
+          expensesBreakdown[key] = effectiveVal;
+          expensesTotal += effectiveVal;
+        });
 
         const totalCost = itemsCost + expensesTotal;
 
@@ -193,19 +200,19 @@ export class IncomeController {
       // 3. Purchases (Flattened Order Items with allocated expenses)
       const purchases: any[] = [];
       orders.forEach((order) => {
-        const expenses = order.expenses;
-        let expensesTotal = 0;
-        if (expenses) {
-          const expenseFields = [
-            'tax', 'director', 'customs', 'transportation', 'workers',
-            'stockExchange', 'forensics', 'bank', 'textileMinistry',
-            'export', 'minusConjugation', 'additionalExpenses',
-          ];
-          expensesTotal = expenseFields.reduce((sum, key) => {
-            const val = Number((expenses as any)[key] ?? 0);
-            return sum + (isNaN(val) ? 0 : val);
-          }, 0);
-        }
+        const expenses = order.expenses?.expenses as Record<string, number> | undefined;
+        const totalItemQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+        
+        const allKeys = new Set([...formulaMap.keys(), ...(expenses ? Object.keys(expenses) : [])]);
+
+        const expensesTotal = Array.from(allKeys).reduce((sum, key) => {
+          const storedVal = expenses ? Number(expenses[key] ?? 0) : 0;
+          const effectiveVal =
+            !isNaN(storedVal) && storedVal !== 0
+              ? storedVal
+              : evaluateFormula(formulaMap.get(key) ?? '0', totalItemQuantity);
+          return sum + effectiveVal;
+        }, 0);
 
         const itemsCost = order.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
 

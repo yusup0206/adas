@@ -25,7 +25,7 @@ const LangModal = ({ trigger }: LangModalProps) => {
   };
 
   const triggerElement = trigger ? (
-    React.cloneElement(trigger as React.ReactElement, {
+    React.cloneElement(trigger as React.ReactElement<any>, {
       onClick: (e: React.MouseEvent) => {
         e.stopPropagation();
         // Call original onClick if it exists on trigger

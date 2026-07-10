@@ -215,5 +215,16 @@
   "HALF_ARRIVED": "Bölekleýin alyndy",
   "exporting": "Faýl taýýarlanýar...",
   "downloaded": "Faýl ýükläp alyndy",
-  "exportError": "Faýly ýüklemekde ýalňyşlyk ýüze çykdy"
+  "exportError": "Faýly ýüklemekde ýalňyşlyk ýüze çykdy",
+  "expense_formulas": "Çykdajy formulalary",
+  "formula": "Formula",
+  "formula_help_title": "Formulany nädip girizmelidigini öwreniň",
+  "formula_help_pct": "sargytdaky jemi haryt mukdarynyň göterimi",
+  "formula_help_flat": "dollar bilen kesgitli mukdar",
+  "formula_help_zero": "çykdajy ýok (täsiri ýok)",
+  "formula_help": "Mukdar ($) ýa-da mukdaryň göterimi giriziň (mysal: 5%)",
+  "formula_placeholder": "mysal: 5% ýa-da 12.50",
+  "formula_invalid": "San ýa-da göterim giriziň (mysal: 5%)",
+  "save_formulas": "Formulalary sakla",
+  "MANAGE_SETTINGS": "Sazlamalary dolandyrmak"
 }

@@ -64,18 +64,7 @@ model PurchaseOrderExpenses {
   id                 Int           @id @default(autoincrement())
   purchaseOrder      PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
   purchaseOrderId    Int           @unique
-  tax                Decimal?      @db.Decimal(15, 2)
-  director           Decimal?      @db.Decimal(15, 2)
-  customs            Decimal?      @db.Decimal(15, 2)
-  transportation     Decimal?      @db.Decimal(15, 2)
-  workers            Decimal?      @db.Decimal(15, 2)
-  stockExchange      Decimal?      @db.Decimal(15, 2)
-  forensics          Decimal?      @db.Decimal(15, 2)
-  bank               Decimal?      @db.Decimal(15, 2)
-  textileMinistry    Decimal?      @db.Decimal(15, 2)
-  export             Decimal?      @db.Decimal(15, 2)
-  minusConjugation   Decimal?      @db.Decimal(15, 2)
-  additionalExpenses Decimal?      @db.Decimal(15, 2)
+  expenses           Json          @default("{}")
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 }
@@ -224,4 +213,13 @@ model RolePermission {
   permissionId Int
 
   @@id([roleId, permissionId])
+}
+
+model ExpenseFormula {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  name      String   @default("")
+  formula   String   @default("0")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

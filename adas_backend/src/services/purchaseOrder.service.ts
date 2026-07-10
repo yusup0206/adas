@@ -352,24 +352,11 @@ export class PurchaseOrderService {
       unpaidOrdersCount: Number(unpaidCount[0]?.count ?? 0),
     };
   }
-  async upsertExpenses(orderId: number, data: {
-    tax?: number | null;
-    director?: number | null;
-    customs?: number | null;
-    transportation?: number | null;
-    workers?: number | null;
-    stockExchange?: number | null;
-    forensics?: number | null;
-    bank?: number | null;
-    textileMinistry?: number | null;
-    export?: number | null;
-    minusConjugation?: number | null;
-    additionalExpenses?: number | null;
-  }) {
+  async upsertExpenses(orderId: number, data: Record<string, number>) {
     return await prisma.purchaseOrderExpenses.upsert({
       where: { purchaseOrderId: orderId },
-      update: data,
-      create: { purchaseOrderId: orderId, ...data },
+      update: { expenses: data },
+      create: { purchaseOrderId: orderId, expenses: data },
     });
   }
 }

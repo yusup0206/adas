@@ -7,7 +7,6 @@ import {
   InputNumber,
   Modal,
   Select,
-  Space,
   Tabs,
 } from "antd";
 import { useMemo, useState } from "react";

@@ -19,6 +19,7 @@ const Debt = lazy(() => import("@/pages/Debt"));
 const Users = lazy(() => import("@/pages/Users"));
 const Roles = lazy(() => import("@/pages/Roles"));
 const DispatchWaybill = lazy(() => import("@/pages/DispatchWaybill"));
+const ExpenseFormulas = lazy(() => import("@/pages/ExpenseFormulas"));
 
 function Router() {
   const routes = useRoutes([
@@ -154,6 +155,17 @@ function Router() {
               fallback={<Navigate to="/login" />}
             >
               <DispatchWaybill />
+            </RequirePermission>
+          ),
+        },
+        {
+          path: "expense-formulas",
+          element: (
+            <RequirePermission
+              permission="MANAGE_SETTINGS"
+              fallback={<Navigate to="/login" />}
+            >
+              <ExpenseFormulas />
             </RequirePermission>
           ),
         },

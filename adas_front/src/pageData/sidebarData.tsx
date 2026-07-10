@@ -10,6 +10,7 @@ import {
   FaMoneyBillWave,
   FaUserShield,
   FaUser,
+  FaPercent,
 } from "react-icons/fa6";
 
 export const sidebarData = {
@@ -79,6 +80,12 @@ export const sidebarData = {
           url: "/roles",
           icon: <FaUserShield className="size-5 min-w-5" />,
           permission: "MANAGE_ROLES",
+        },
+        {
+          labelKey: "expense_formulas",
+          url: "/expense-formulas",
+          icon: <FaPercent className="size-5 min-w-5" />,
+          permission: "MANAGE_SETTINGS",
         },
       ],
     },

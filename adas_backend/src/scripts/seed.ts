@@ -12,7 +12,14 @@ const PERMISSIONS = [
   { name: 'MANAGE_ORDERS', description: 'Can manage purchase orders' },
   { name: 'MANAGE_WAREHOUSE', description: 'Can manage warehouse arrivals and dispatches' },
   { name: 'VIEW_REPORTS', description: 'Can view reports' },
-  { name: 'VIEW_INCOME', description: 'Can view income' }
+  { name: 'VIEW_INCOME', description: 'Can view income' },
+  { name: 'MANAGE_SETTINGS', description: 'Can manage expense formula settings' },
+];
+
+const EXPENSE_FORMULA_KEYS = [
+  'tax', 'director', 'customs', 'transportation', 'workers',
+  'stockExchange', 'forensics', 'bank', 'textileMinistry',
+  'export', 'minusConjugation', 'additionalExpenses',
 ];
 
 async function main() {
@@ -66,6 +73,16 @@ async function main() {
     }
   });
   console.log('Admin user seeded.');
+
+  // 5. Seed default expense formulas (value "0" = no effect, user can update via UI)
+  for (const key of EXPENSE_FORMULA_KEYS) {
+    await prisma.expenseFormula.upsert({
+      where: { key },
+      update: {}, // Don't overwrite user-configured formulas on re-seed
+      create: { key, formula: '0' },
+    });
+  }
+  console.log('Expense formulas seeded.');
 }
 
 main()

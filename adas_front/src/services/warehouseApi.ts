@@ -56,7 +56,7 @@ export const warehouseApi = createApi({
     }),
     getDispatchById: builder.query<DispatchGroup, number>({
       query: (id) => `/warehouse/dispatches/${id}`,
-      providesTags: (result, error, id) => [{ type: "WDispatch", id }],
+      providesTags: (_result, _error, id) => [{ type: "WDispatch", id }],
     }),
     createDispatch: builder.mutation<void, CreateDispatchValues>({
       query: (body) => ({ url: "/warehouse/dispatches", method: "POST", body }),

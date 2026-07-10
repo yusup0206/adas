@@ -18,18 +18,7 @@ export interface OrderFilters {
 export interface PurchaseOrderExpenses {
   id: number;
   purchaseOrderId: number;
-  tax?: number | null;
-  director?: number | null;
-  customs?: number | null;
-  transportation?: number | null;
-  workers?: number | null;
-  stockExchange?: number | null;
-  forensics?: number | null;
-  bank?: number | null;
-  textileMinistry?: number | null;
-  export?: number | null;
-  minusConjugation?: number | null;
-  additionalExpenses?: number | null;
+  expenses: Record<string, number>;
 }
 
 export interface LinkedLoan {

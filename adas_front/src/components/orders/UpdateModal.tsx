@@ -16,22 +16,7 @@ import { RiEyeLine } from "react-icons/ri";
 import { useUpsertOrderExpensesMutation } from "@/services/ordersApi";
 import dayjs from "dayjs";
 
-// ── Expense field definitions ──────────────────────────────────────────────
-const EXPENSE_FIELDS: { key: string; labelKey: string }[] = [
-  { key: "tax", labelKey: "expense_tax" },
-  { key: "director", labelKey: "expense_director" },
-  { key: "customs", labelKey: "expense_customs" },
-  { key: "transportation", labelKey: "expense_transportation" },
-  { key: "workers", labelKey: "expense_workers" },
-  { key: "stockExchange", labelKey: "expense_stockExchange" },
-  { key: "forensics", labelKey: "expense_forensics" },
-  { key: "bank", labelKey: "expense_bank" },
-  { key: "textileMinistry", labelKey: "expense_textileMinistry" },
-  { key: "export", labelKey: "expense_export" },
-  { key: "minusConjugation", labelKey: "expense_minusConjugation" },
-  { key: "additionalExpenses", labelKey: "expense_additionalExpenses" },
-];
-
+import { useGetFormulasQuery } from "@/services/expenseFormulasApi";
 // ── Loans Tab ───────────────────────────────────────────────────────────────
 const LoansTab = ({ loans }: { loans?: LinkedLoan[] }) => {
   const { t, i18n } = useTranslation();
@@ -128,32 +113,67 @@ const LoansTab = ({ loans }: { loans?: LinkedLoan[] }) => {
   );
 };
 
+// Helper to evaluate formula on frontend
+function evaluateFormula(formula: string, totalQuantity: number): number {
+  if (!formula) return 0;
+  const trimmed = formula.trim();
+  if (trimmed.endsWith("%")) {
+    const pct = parseFloat(trimmed.slice(0, -1));
+    if (isNaN(pct)) return 0;
+    return (pct / 100) * totalQuantity;
+  }
+  const flat = parseFloat(trimmed);
+  return isNaN(flat) ? 0 : flat;
+}
+
 // ── Expenses Tab ────────────────────────────────────────────────────────────
 const ExpensesTab = ({ record }: { record: Order }) => {
   const { t } = useTranslation();
   const { message } = App.useApp();
   const [form] = Form.useForm();
   const [upsertExpenses, { isLoading }] = useUpsertOrderExpensesMutation();
+  const { data: formulasData } = useGetFormulasQuery();
+  const dynamicExpenses = formulasData?.data || [];
+
+  const totalItemQuantity = record.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
 
   // Populate form with existing expenses when modal opens
   useEffect(() => {
-    if (record.expenses) {
-      form.setFieldsValue(record.expenses);
+    if (record.expenses?.expenses) {
+      // For older JSON data it might be nested, or already parsed
+      const expObj =
+        typeof record.expenses.expenses === "string"
+          ? JSON.parse(record.expenses.expenses)
+          : record.expenses.expenses;
+      
+      // We only want to set fields that have explicit values (not fallbacks)
+      // If a user previously saved '0', they might want to override the formula to 0.
+      form.setFieldsValue(expObj);
     }
   }, [record.expenses, form]);
 
-  // Compute total of all filled fields
+  // Compute total of all filled fields + fallbacks
   const allValues = Form.useWatch([], form) ?? {};
-  const total = EXPENSE_FIELDS.reduce((sum, f) => {
-    const val = Number(allValues[f.key] ?? 0);
-    return sum + (isNaN(val) ? 0 : val);
+  const total = dynamicExpenses.reduce((sum, f) => {
+    const manualVal = allValues[f.key];
+    const parsedManual = Number(manualVal);
+    // If user hasn't typed anything (undefined/null), use fallback
+    if (manualVal === undefined || manualVal === null || manualVal === "") {
+      return sum + evaluateFormula(f.formula, totalItemQuantity);
+    }
+    // Otherwise use what they typed
+    return sum + (isNaN(parsedManual) ? 0 : parsedManual);
   }, 0);
 
   const handleSave = async (values: Record<string, number | null>) => {
-    // Convert undefined to null for clean DB storage
-    const cleaned: Record<string, number | null> = {};
-    EXPENSE_FIELDS.forEach(({ key }) => {
-      cleaned[key] = values[key] ?? null;
+    const cleaned: Record<string, number> = {};
+    dynamicExpenses.forEach(({ key }) => {
+      // Only send values the user explicitly typed. 
+      // If they left it blank, don't send it, so backend uses fallback.
+      if (values[key] !== undefined && values[key] !== null) {
+        const val = Number(values[key]);
+        cleaned[key] = isNaN(val) ? 0 : val;
+      }
     });
     try {
       await upsertExpenses({ id: record.id, body: cleaned }).unwrap();
@@ -166,17 +186,20 @@ const ExpensesTab = ({ record }: { record: Order }) => {
   return (
     <Form form={form} layout="vertical" onFinish={handleSave}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-        {EXPENSE_FIELDS.map(({ key, labelKey }) => (
-          <Form.Item key={key} name={key} label={t(labelKey)}>
-            <InputNumber
-              className="w-full"
-              step={0.01}
-              min={0}
-              placeholder="0.00"
-              suffix="$"
-            />
-          </Form.Item>
-        ))}
+        {dynamicExpenses.map((f) => {
+          const fallback = evaluateFormula(f.formula, totalItemQuantity).toFixed(2);
+          return (
+            <Form.Item key={f.key} name={f.key} label={f.name || t(`expense_${f.key}`)}>
+              <InputNumber
+                className="w-full"
+                step={0.01}
+                min={0}
+                placeholder={`${fallback}`}
+                suffix="$"
+              />
+            </Form.Item>
+          );
+        })}
       </div>
 
       <Divider />

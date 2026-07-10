@@ -13,6 +13,7 @@ import { userController } from './controllers/user.controller';
 import { roleController } from './controllers/role.controller';
 import { permissionController } from './controllers/permission.controller';
 import { loanController } from './controllers/loan.controller';
+import { expenseFormulaController } from './controllers/expenseFormula.controller';
 import { authenticateToken } from './middlewares/auth.middleware';
 import { requirePermission } from './middlewares/permission.middleware';
 dotenv.config();
@@ -80,6 +81,13 @@ app.delete('/api/orders/:id', authenticateToken, requirePermission('MANAGE_ORDER
 app.get('/api/suppliers/:id/balance', authenticateToken, requirePermission('MANAGE_SUPPLIERS'), (req, res) => purchaseOrderController.getSupplierBalance(req, res));
 
 app.get('/api/income', authenticateToken, requirePermission('VIEW_INCOME'), (req, res) => incomeController.getIncomeSummary(req, res));
+
+// Expense Formula Settings routes
+app.get('/api/expense-formulas', authenticateToken, requirePermission('MANAGE_SETTINGS'), (req, res) => expenseFormulaController.getAll(req, res));
+app.post('/api/expense-formulas', authenticateToken, requirePermission('MANAGE_SETTINGS'), (req, res) => expenseFormulaController.create(req, res));
+app.patch('/api/expense-formulas/:id', authenticateToken, requirePermission('MANAGE_SETTINGS'), (req, res) => expenseFormulaController.update(req, res));
+app.delete('/api/expense-formulas/:id', authenticateToken, requirePermission('MANAGE_SETTINGS'), (req, res) => expenseFormulaController.delete(req, res));
+app.patch('/api/expense-formulas', authenticateToken, requirePermission('MANAGE_SETTINGS'), (req, res) => expenseFormulaController.bulkUpdate(req, res));
 
 // Warehouse routes
 app.get('/api/warehouse/stock', authenticateToken, requirePermission('MANAGE_WAREHOUSE'), (req, res) => warehouseController.getStock(req, res));

@@ -6,6 +6,7 @@ import { Table, Tag, Tabs, Space, Popover, Tooltip } from "antd";
 import type { TableProps } from "antd";
 import { useTranslation } from "react-i18next";
 import { useGetIncomeSummaryQuery } from "@/services/incomeApi";
+import { useGetFormulasQuery } from "@/services/expenseFormulasApi";
 import type {
   IncomeOrder,
   IncomeProduct,
@@ -61,6 +62,7 @@ const Income = () => {
   const isRu = i18n.language === "ru";
 
   const { data, isLoading } = useGetIncomeSummaryQuery();
+  const { data: formulasData } = useGetFormulasQuery();
 
   // ── Orders table columns ─────────────────────────────────────────────────
   const orderColumns: TableProps<IncomeOrder>["columns"] = [
@@ -134,7 +136,9 @@ const Income = () => {
                   key={key}
                   className="flex justify-between gap-6 text-xs pb-1 border-b border-gray-100 last:border-0 last:pb-0"
                 >
-                  <span className="text-gray-500">{t(`expense_${key}`)}:</span>
+                  <span className="text-gray-500">{
+                    formulasData?.data?.find(f => f.key === key)?.name || t(`expense_${key}`)
+                  }:</span>
                   <span className="font-semibold">
                     {Number(val).toFixed(2)} $
                   </span>
