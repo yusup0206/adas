@@ -18,33 +18,18 @@ import {
 } from "@/services/ordersApi";
 import type { Order } from "@/interfaces/orders.interface";
 
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+
 const Orders = () => {
   const { t, i18n } = useTranslation();
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
   // states
-  const [filters, setFilters] = useState({
-    page: searchParams.get("page") || "1",
-    pageSize: searchParams.get("pageSize") || "10",
-    search: searchParams.get("search") || "",
-    status: searchParams.get("status") || "ALL",
+  const { filters, setFilters } = useUrlFilters({
+    page: "1",
+    pageSize: "10",
+    search: "",
+    status: "ALL",
   });
-
-  useEffect(() => {
-    const params: Record<string, string> = {};
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value === "" || value === undefined || value === null) return;
-      if (typeof value === "boolean") {
-        params[key] = value ? "true" : "false";
-      } else {
-        params[key] = value.toString();
-      }
-    });
-
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
 
   const { data: ordersData, isLoading: ordersLoading } =
     useGetOrdersQuery(filters);

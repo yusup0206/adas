@@ -14,12 +14,16 @@ import type { ExpenseFormula } from "@/services/expenseFormulasApi";
 import { FaPlus } from "react-icons/fa6";
 import { RiPencilFill } from "react-icons/ri";
 import DeleteModal from "@/components/shared/DeleteModal";
+import { IoSearch } from "react-icons/io5";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 const ExpenseFormulas = () => {
   const { message } = App.useApp();
   const { t } = useTranslation();
   const [form] = Form.useForm();
-  
+
+  const { filters, setFilters } = useUrlFilters({ search: "" });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -67,12 +71,18 @@ const ExpenseFormulas = () => {
       if (err?.data?.message) {
         message.error(err.data.message);
       } else if (err?.errorFields) {
-        // Validation error
+        // Validation error — antd already shows inline messages
       } else {
         message.error(t("error_occurred"));
       }
     }
   };
+
+  const searchTerm = filters.search.toLowerCase();
+  const filteredFormulas = (data?.data || []).filter((f) => {
+    const displayName = (f.name || t(`expense_${f.key}`)).toLowerCase();
+    return displayName.includes(searchTerm);
+  });
 
   const columns = [
     {
@@ -83,12 +93,17 @@ const ExpenseFormulas = () => {
     {
       title: t("name"),
       dataIndex: "name",
-      render: (name: string, record: ExpenseFormula) => name || t(`expense_${record.key}`),
+      render: (name: string, record: ExpenseFormula) =>
+        name || t(`expense_${record.key}`),
     },
     {
       title: t("formula"),
       dataIndex: "formula",
-      render: (formula: string) => <span className="font-mono bg-gray-100 px-2 py-1 rounded">{formula}</span>,
+      render: (formula: string) => (
+        <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+          {formula}
+        </span>
+      ),
     },
     {
       title: t("actions"),
@@ -111,19 +126,35 @@ const ExpenseFormulas = () => {
       <Header title={t("expense_formulas")} />
       <Section>
         <Box>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">{t("expense_formulas")}</h2>
-            <Button type="primary" icon={<FaPlus />} onClick={handleOpenAdd}>
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+            <div className="max-w-full md:max-w-[300px] w-full">
+              <Input
+                prefix={<IoSearch />}
+                size="large"
+                placeholder={t("search")}
+                value={filters.search}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, search: e.target.value }))
+                }
+                allowClear
+              />
+            </div>
+            <Button
+              type="primary"
+              size="large"
+              icon={<FaPlus />}
+              onClick={handleOpenAdd}
+            >
               {t("add_new")}
             </Button>
           </div>
-          
+
           <Table
             loading={isLoading || isDeleting}
             columns={columns}
-            dataSource={data?.data || []}
+            dataSource={filteredFormulas}
             rowKey="id"
-            pagination={false}
+            pagination={{ position: ["bottomCenter"], pageSize: 10, showSizeChanger: true }}
           />
         </Box>
       </Section>
@@ -163,7 +194,11 @@ const ExpenseFormulas = () => {
               },
             ]}
           >
-            <Input placeholder="5% or 12.50" suffix="$ / %" className="font-mono" />
+            <Input
+              placeholder="5% or 12.50"
+              suffix="$ / %"
+              className="font-mono"
+            />
           </Form.Item>
         </Form>
       </Modal>

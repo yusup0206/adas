@@ -16,33 +16,18 @@ import DeleteModal from "@/components/shared/DeleteModal";
 import CreateModal from "@/components/suppliers/CreateModal";
 import UpdateModal from "@/components/suppliers/UpdateModal";
 
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+
 const Suppliers = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language === "ru" ? "ru" : "tm";
 
   // states
-  const [filters, setFilters] = useState({
-    page: searchParams.get("page") || "1",
-    pageSize: searchParams.get("pageSize") || "10",
-    search: searchParams.get("search") || "",
+  const { filters, setFilters } = useUrlFilters({
+    page: "1",
+    pageSize: "10",
+    search: "",
   });
-
-  useEffect(() => {
-    const params: Record<string, string> = {};
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value === "" || value === undefined || value === null) return;
-
-      if (typeof value === "boolean") {
-        params[key] = value ? "true" : "false";
-      } else {
-        params[key] = value.toString();
-      }
-    });
-
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
 
   // queries
   const { data: suppliersData, isLoading: suppliersLoading } =

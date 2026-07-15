@@ -80,7 +80,7 @@ const Header = ({ title, goBack }: MainHeaderProps) => {
   ];
 
   return (
-    <div className="sticky top-0 z-40 bg-bgColor w-full flex items-center justify-between gap-4 p-6 border-b border-borderColor">
+    <div className="sticky top-0 z-40 bg-white w-full flex items-center justify-between gap-4 p-6 border-b border-borderColor">
       <div className="flex items-center gap-4">
         <div className="flex md:hidden">
           <Button

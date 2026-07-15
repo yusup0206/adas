@@ -25,6 +25,7 @@ import {
   FaFileInvoice,
 } from "react-icons/fa6";
 import dayjs from "dayjs";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 // ── Stat card (matches Debt page pattern) ─────────────────────────────────
 const StatCard = ({
@@ -61,8 +62,24 @@ const Income = () => {
   const { t, i18n } = useTranslation();
   const isRu = i18n.language === "ru";
 
+  const { filters, setFilters } = useUrlFilters({
+    tab: "orders",
+    ordersPage: "1",
+    productsPage: "1",
+    salesPage: "1",
+    purchasesPage: "1",
+    repaymentsPage: "1",
+  });
+
   const { data, isLoading } = useGetIncomeSummaryQuery();
   const { data: formulasData } = useGetFormulasQuery();
+
+  const activeTab = filters.tab;
+  const PAGE_SIZE = 10;
+
+  const handleTabChange = (key: string) => {
+    setFilters((prev) => ({ ...prev, tab: key }));
+  };
 
   // ── Orders table columns ─────────────────────────────────────────────────
   const orderColumns: TableProps<IncomeOrder>["columns"] = [
@@ -71,7 +88,9 @@ const Income = () => {
       key: "index",
       width: 55,
       render: (_: unknown, __: unknown, i: number) => (
-        <span className="text-gray-400 font-medium">{i + 1}</span>
+        <span className="text-gray-400 font-medium">
+          {(Number(filters.ordersPage) - 1) * PAGE_SIZE + i + 1}
+        </span>
       ),
     },
     {
@@ -231,7 +250,9 @@ const Income = () => {
       key: "index",
       width: 55,
       render: (_: unknown, __: unknown, i: number) => (
-        <span className="text-gray-400 font-medium">{i + 1}</span>
+        <span className="text-gray-400 font-medium">
+          {(Number(filters.productsPage) - 1) * PAGE_SIZE + i + 1}
+        </span>
       ),
     },
     {
@@ -304,7 +325,9 @@ const Income = () => {
       key: "index",
       width: 55,
       render: (_: unknown, __: unknown, i: number) => (
-        <span className="text-gray-400 font-medium">{i + 1}</span>
+        <span className="text-gray-400 font-medium">
+          {(Number(filters.salesPage) - 1) * PAGE_SIZE + i + 1}
+        </span>
       ),
     },
     {
@@ -433,7 +456,9 @@ const Income = () => {
       key: "index",
       width: 55,
       render: (_: unknown, __: unknown, i: number) => (
-        <span className="text-gray-400 font-medium">{i + 1}</span>
+        <span className="text-gray-400 font-medium">
+          {(Number(filters.purchasesPage) - 1) * PAGE_SIZE + i + 1}
+        </span>
       ),
     },
     {
@@ -550,7 +575,9 @@ const Income = () => {
       key: "index",
       width: 55,
       render: (_: unknown, __: unknown, i: number) => (
-        <span className="text-gray-400 font-medium">{i + 1}</span>
+        <span className="text-gray-400 font-medium">
+          {(Number(filters.repaymentsPage) - 1) * PAGE_SIZE + i + 1}
+        </span>
       ),
     },
     {
@@ -627,7 +654,14 @@ const Income = () => {
           dataSource={data?.orders || []}
           rowKey="id"
           size="large"
-          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          pagination={{
+            position: ["bottomCenter"],
+            pageSize: PAGE_SIZE,
+            current: Number(filters.ordersPage),
+            total: data?.orders?.length ?? 0,
+            showSizeChanger: false,
+            onChange: (p) => setFilters((prev) => ({ ...prev, ordersPage: String(p) })),
+          }}
           className="overflow-x-auto"
         />
       ),
@@ -647,7 +681,14 @@ const Income = () => {
           dataSource={data?.products || []}
           rowKey="productId"
           size="large"
-          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          pagination={{
+            position: ["bottomCenter"],
+            pageSize: PAGE_SIZE,
+            current: Number(filters.productsPage),
+            total: data?.products?.length ?? 0,
+            showSizeChanger: false,
+            onChange: (p) => setFilters((prev) => ({ ...prev, productsPage: String(p) })),
+          }}
           className="overflow-x-auto"
         />
       ),
@@ -667,7 +708,14 @@ const Income = () => {
           dataSource={data?.sales || []}
           rowKey="id"
           size="large"
-          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          pagination={{
+            position: ["bottomCenter"],
+            pageSize: PAGE_SIZE,
+            current: Number(filters.salesPage),
+            total: data?.sales?.length ?? 0,
+            showSizeChanger: false,
+            onChange: (p) => setFilters((prev) => ({ ...prev, salesPage: String(p) })),
+          }}
           className="overflow-x-auto"
         />
       ),
@@ -687,7 +735,14 @@ const Income = () => {
           dataSource={purchaseGroups}
           rowKey="key"
           size="large"
-          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          pagination={{
+            position: ["bottomCenter"],
+            pageSize: PAGE_SIZE,
+            current: Number(filters.purchasesPage),
+            total: purchaseGroups.length,
+            showSizeChanger: false,
+            onChange: (p) => setFilters((prev) => ({ ...prev, purchasesPage: String(p) })),
+          }}
           className="overflow-x-auto"
           expandable={{
             expandedRowRender: (record) => (
@@ -720,7 +775,14 @@ const Income = () => {
           dataSource={data?.loanRepayments || []}
           rowKey="id"
           size="large"
-          pagination={{ position: ["bottomCenter"], pageSize: 10 }}
+          pagination={{
+            position: ["bottomCenter"],
+            pageSize: PAGE_SIZE,
+            current: Number(filters.repaymentsPage),
+            total: data?.loanRepayments?.length ?? 0,
+            showSizeChanger: false,
+            onChange: (p) => setFilters((prev) => ({ ...prev, repaymentsPage: String(p) })),
+          }}
           className="overflow-x-auto"
         />
       ),
@@ -775,7 +837,12 @@ const Income = () => {
 
           {/* ── Tables ── */}
           <Box>
-            <Tabs defaultActiveKey="products" items={tabs} size="large" />
+            <Tabs
+              activeKey={activeTab}
+              onChange={handleTabChange}
+              items={tabs}
+              size="large"
+            />
           </Box>
         </Section>
       </section>

@@ -13,33 +13,18 @@ import { useDeleteUnitMutation, useGetUnitsQuery } from "@/services/unitsApi";
 import type { Unit } from "@/interfaces/units.interface";
 import DeleteModal from "@/components/shared/DeleteModal";
 
+import { useUrlFilters } from "@/hooks/useUrlFilters";
+
 const Units = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
 
   // states
-  const [filters, setFilters] = useState({
-    page: searchParams.get("page") || "1",
-    pageSize: searchParams.get("pageSize") || "10",
-    search: searchParams.get("search") || "",
+  const { filters, setFilters } = useUrlFilters({
+    page: "1",
+    pageSize: "10",
+    search: "",
   });
-
-  useEffect(() => {
-    const params: Record<string, string> = {};
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value === "" || value === undefined || value === null) return;
-
-      if (typeof value === "boolean") {
-        params[key] = value ? "true" : "false";
-      } else {
-        params[key] = value.toString();
-      }
-    });
-
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
 
   // queries
   const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery(filters);

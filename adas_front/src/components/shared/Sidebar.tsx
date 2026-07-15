@@ -29,7 +29,7 @@ const Sidebar = ({ onClose }: SidebarProps) => {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col border-r border-borderColor bg-bgColor">
+    <div className="w-full h-screen flex flex-col border-r border-borderColor bg-white">
       <div className="w-full h-[97px] p-4 flex items-center justify-between gap-4 border-b border-borderColor">
         <img
           src="/assets/images/logo2.png"

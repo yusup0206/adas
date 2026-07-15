@@ -2,7 +2,6 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import DeleteModal from "@/components/shared/DeleteModal";
-// import CreateArrivalModal from "@/components/warehouse/CreateArrivalModal";
 import CreateDispatchModal from "@/components/warehouse/CreateDispatchModal";
 import {
   useGetStockQuery,
@@ -16,6 +15,8 @@ import { EyeOutlined } from "@ant-design/icons";
 import type { TabsProps, TableProps } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams, Link } from "react-router-dom";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 import type {
   WarehouseType,
   WarehouseArrival,
@@ -25,7 +26,6 @@ import type {
 } from "@/interfaces/warehouses.interface";
 import dayjs from "dayjs";
 import { IoDocumentAttach } from "react-icons/io5";
-import { Link } from "react-router-dom";
 
 const { Text } = Typography;
 
@@ -37,9 +37,28 @@ const WarehousePanel = ({
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
 
-  const [arrivalPage, setArrivalPage] = useState(1);
-  const [dispatchPage, setDispatchPage] = useState(1);
+  const { filters, setFilters } = useUrlFilters({
+    tab: "stock",
+    arrivalPage: "1",
+    dispatchPage: "1",
+  });
+
+  const activeTab = filters.tab;
+  const arrivalPage = Number(filters.arrivalPage);
+  const dispatchPage = Number(filters.dispatchPage);
   const pageSize = 10;
+
+  const handleTabChange = (key: string) => {
+    setFilters(prev => ({ ...prev, tab: key }));
+  };
+
+  const setArrivalPage = (page: number) => {
+    setFilters(prev => ({ ...prev, arrivalPage: String(page) }));
+  };
+
+  const setDispatchPage = (page: number) => {
+    setFilters(prev => ({ ...prev, dispatchPage: String(page) }));
+  };
 
   const { data: stock, isLoading: stockLoading } = useGetStockQuery({
     type: warehouseType,
@@ -269,9 +288,6 @@ const WarehousePanel = ({
       label: t("arrivals"),
       children: (
         <>
-          {/* <div className="flex justify-end mb-4">
-            <CreateArrivalModal warehouseType={warehouseType} />
-          </div> */}
           <Table
             loading={arrivalsLoading}
             columns={arrivalColumns}
@@ -318,7 +334,7 @@ const WarehousePanel = ({
 
   return (
     <>
-      <Tabs defaultActiveKey="stock" items={innerTabs} />
+      <Tabs activeKey={activeTab} onChange={handleTabChange} items={innerTabs} />
       <Modal
         title={t("view_products")}
         open={!!viewProductsGroup}
@@ -340,6 +356,14 @@ const WarehousePanel = ({
 
 const Warehouses = () => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeType = searchParams.get("type") || "IMPORT";
+
+  const handleTypeChange = (key: string) => {
+    // When switching top-level tabs, we reset inner params to avoid leaking state
+    setSearchParams({ type: key }, { replace: true });
+  };
 
   const tabs: TabsProps["items"] = [
     {
@@ -359,7 +383,7 @@ const Warehouses = () => {
       <Header title={t("warehouses")} />
       <Section>
         <Box>
-          <Tabs defaultActiveKey="IMPORT" items={tabs} size="large" />
+          <Tabs activeKey={activeType} onChange={handleTypeChange} items={tabs} size="large" />
         </Box>
       </Section>
     </section>

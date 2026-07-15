@@ -13,6 +13,8 @@ import Section from "@/components/shared/Section";
 import Box from "@/components/shared/Box";
 import { RiPencilFill } from "react-icons/ri";
 import DeleteModal from "@/components/shared/DeleteModal";
+import { IoSearch } from "react-icons/io5";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 const Roles = () => {
   const { message } = App.useApp();
@@ -22,6 +24,8 @@ const Roles = () => {
   const [updateRole] = useUpdateRoleMutation();
   const [deleteRole] = useDeleteRoleMutation();
   const { t } = useTranslation();
+
+  const { filters, setFilters } = useUrlFilters({ search: "" });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRole, setEditingRole] = useState<any>(null);
@@ -66,8 +70,13 @@ const Roles = () => {
     await deleteRole(id as number).unwrap();
   };
 
+  const searchTerm = filters.search.toLowerCase();
+  const filteredRoles = (rolesData?.data || []).filter((r: any) =>
+    r.name.toLowerCase().includes(searchTerm)
+  );
+
   const columns = [
-    { title: t("id"), dataIndex: "id", key: "id" },
+    { title: t("id"), dataIndex: "id", key: "id", width: 60 },
     { title: t("role_name"), dataIndex: "name", key: "name" },
     {
       title: t("permissions"),
@@ -103,7 +112,19 @@ const Roles = () => {
       <Header title={t("roles")} />
       <Section>
         <Box>
-          <div className="flex justify-end items-center mb-4">
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+            <div className="max-w-full md:max-w-[300px] w-full">
+              <Input
+                prefix={<IoSearch />}
+                size="large"
+                placeholder={t("search")}
+                value={filters.search}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, search: e.target.value }))
+                }
+                allowClear
+              />
+            </div>
             <Button
               type="primary"
               size="large"
@@ -116,8 +137,10 @@ const Roles = () => {
           <Table
             rowKey="id"
             columns={columns}
-            dataSource={rolesData?.data || []}
+            dataSource={filteredRoles}
             loading={isLoading}
+            pagination={{ position: ["bottomCenter"], pageSize: 10, showSizeChanger: true }}
+            className="overflow-x-auto"
           />
 
           <Modal

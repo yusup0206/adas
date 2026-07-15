@@ -35,6 +35,7 @@ import dayjs from "dayjs";
 import ImportLoanPayModal from "@/components/loans/ImportLoanPayModal";
 import ExportLoanPayModal from "@/components/loans/ExportLoanPayModal";
 import { useSearchParams } from "react-router-dom";
+import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 // ── Stat card ──────────────────────────────────────────────────────────────
 const StatCard = ({
@@ -213,12 +214,17 @@ const PayModal = ({
 // ── Tab: Supplier Debt ─────────────────────────────────────────────────────
 const SupplierDebtPanel = () => {
   const { t, i18n } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { filters, setFilters } = useUrlFilters({
+    page: "1",
+    status: "ALL",
+    dateFrom: "",
+    dateTo: "",
+  });
 
-  const page = Number(searchParams.get("page")) || 1;
-  const statusFilter = searchParams.get("status") || "ALL";
-  const dateFrom = searchParams.get("dateFrom") || undefined;
-  const dateTo = searchParams.get("dateTo") || undefined;
+  const page = Number(filters.page);
+  const statusFilter = filters.status;
+  const dateFrom = filters.dateFrom || undefined;
+  const dateTo = filters.dateTo || undefined;
 
   const dates: [dayjs.Dayjs, dayjs.Dayjs] | null =
     dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null;
@@ -241,26 +247,29 @@ const SupplierDebtPanel = () => {
   const unpaidOrders = ordersData?.list ?? [];
 
   const handlePageChange = (p: number) => {
-    searchParams.set("page", String(p));
-    setSearchParams(searchParams, { replace: true });
+    setFilters(prev => ({ ...prev, page: String(p) }));
   };
 
   const handleStatusChange = (val: string) => {
-    searchParams.set("status", val);
-    searchParams.set("page", "1");
-    setSearchParams(searchParams, { replace: true });
+    setFilters(prev => ({ ...prev, status: val, page: "1" }));
   };
 
   const handleDatesChange = (vals: any) => {
     if (vals) {
-      searchParams.set("dateFrom", vals[0].format("YYYY-MM-DD"));
-      searchParams.set("dateTo", vals[1].format("YYYY-MM-DD"));
+      setFilters(prev => ({
+        ...prev,
+        dateFrom: vals[0].format("YYYY-MM-DD"),
+        dateTo: vals[1].format("YYYY-MM-DD"),
+        page: "1",
+      }));
     } else {
-      searchParams.delete("dateFrom");
-      searchParams.delete("dateTo");
+      setFilters(prev => ({
+        ...prev,
+        dateFrom: "",
+        dateTo: "",
+        page: "1",
+      }));
     }
-    searchParams.set("page", "1");
-    setSearchParams(searchParams, { replace: true });
   };
 
   const columns: TableProps<Order>["columns"] = [
@@ -342,7 +351,7 @@ const SupplierDebtPanel = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <StatCard
           icon={<FaMoneyBillWave />}
           label={t("total_debt")}
@@ -376,7 +385,7 @@ const SupplierDebtPanel = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-md border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-4 mb-4 bg-gray-50 p-4 rounded-md border border-gray-100 overflow-x-auto">
         <Select
           className="w-48"
           value={statusFilter}
@@ -424,37 +433,45 @@ const SupplierDebtPanel = () => {
 // ── Tab: Import Loans ──────────────────────────────────────────────────────
 const ImportLoansPanel = () => {
   const { t, i18n } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { filters, setFilters } = useUrlFilters({
+    page: "1",
+    status: "ALL",
+    dateFrom: "",
+    dateTo: "",
+  });
 
-  const page = Number(searchParams.get("page")) || 1;
-  const statusFilter = searchParams.get("status") || "ALL";
-  const dateFrom = searchParams.get("dateFrom") || undefined;
-  const dateTo = searchParams.get("dateTo") || undefined;
+  const page = Number(filters.page);
+  const statusFilter = filters.status;
+  const dateFrom = filters.dateFrom || undefined;
+  const dateTo = filters.dateTo || undefined;
 
   const dates: [dayjs.Dayjs, dayjs.Dayjs] | null =
     dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null;
 
   const handlePageChange = (p: number) => {
-    searchParams.set("page", String(p));
-    setSearchParams(searchParams, { replace: true });
+    setFilters(prev => ({ ...prev, page: String(p) }));
   };
 
   const handleStatusChange = (val: string) => {
-    searchParams.set("status", val);
-    searchParams.set("page", "1");
-    setSearchParams(searchParams, { replace: true });
+    setFilters(prev => ({ ...prev, status: val, page: "1" }));
   };
 
   const handleDatesChange = (vals: any) => {
     if (vals) {
-      searchParams.set("dateFrom", vals[0].format("YYYY-MM-DD"));
-      searchParams.set("dateTo", vals[1].format("YYYY-MM-DD"));
+      setFilters(prev => ({
+        ...prev,
+        dateFrom: vals[0].format("YYYY-MM-DD"),
+        dateTo: vals[1].format("YYYY-MM-DD"),
+        page: "1",
+      }));
     } else {
-      searchParams.delete("dateFrom");
-      searchParams.delete("dateTo");
+      setFilters(prev => ({
+        ...prev,
+        dateFrom: "",
+        dateTo: "",
+        page: "1",
+      }));
     }
-    searchParams.set("page", "1");
-    setSearchParams(searchParams, { replace: true });
   };
 
   const { data, isLoading } = useGetLoansQuery({
@@ -627,7 +644,7 @@ const ImportLoansPanel = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <StatCard
           icon={<FaMoneyBillWave />}
           label={t("total_debt")}
@@ -659,7 +676,7 @@ const ImportLoansPanel = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-md border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-4 mb-4 bg-gray-50 p-4 rounded-md border border-gray-100 overflow-x-auto">
         <Select
           className="w-48"
           value={statusFilter}
@@ -725,37 +742,45 @@ const ImportLoansPanel = () => {
 // ── Tab: Export Loans ──────────────────────────────────────────────────────
 const ExportLoansPanel = () => {
   const { t, i18n } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { filters, setFilters } = useUrlFilters({
+    page: "1",
+    status: "ALL",
+    dateFrom: "",
+    dateTo: "",
+  });
 
-  const page = Number(searchParams.get("page")) || 1;
-  const statusFilter = searchParams.get("status") || "ALL";
-  const dateFrom = searchParams.get("dateFrom") || undefined;
-  const dateTo = searchParams.get("dateTo") || undefined;
+  const page = Number(filters.page);
+  const statusFilter = filters.status;
+  const dateFrom = filters.dateFrom || undefined;
+  const dateTo = filters.dateTo || undefined;
 
   const dates: [dayjs.Dayjs, dayjs.Dayjs] | null =
     dateFrom && dateTo ? [dayjs(dateFrom), dayjs(dateTo)] : null;
 
   const handlePageChange = (p: number) => {
-    searchParams.set("page", String(p));
-    setSearchParams(searchParams, { replace: true });
+    setFilters(prev => ({ ...prev, page: String(p) }));
   };
 
   const handleStatusChange = (val: string) => {
-    searchParams.set("status", val);
-    searchParams.set("page", "1");
-    setSearchParams(searchParams, { replace: true });
+    setFilters(prev => ({ ...prev, status: val, page: "1" }));
   };
 
   const handleDatesChange = (vals: any) => {
     if (vals) {
-      searchParams.set("dateFrom", vals[0].format("YYYY-MM-DD"));
-      searchParams.set("dateTo", vals[1].format("YYYY-MM-DD"));
+      setFilters(prev => ({
+        ...prev,
+        dateFrom: vals[0].format("YYYY-MM-DD"),
+        dateTo: vals[1].format("YYYY-MM-DD"),
+        page: "1",
+      }));
     } else {
-      searchParams.delete("dateFrom");
-      searchParams.delete("dateTo");
+      setFilters(prev => ({
+        ...prev,
+        dateFrom: "",
+        dateTo: "",
+        page: "1",
+      }));
     }
-    searchParams.set("page", "1");
-    setSearchParams(searchParams, { replace: true });
   };
 
   const { data, isLoading } = useGetLoansQuery({
@@ -928,7 +953,7 @@ const ExportLoansPanel = () => {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <StatCard
           icon={<FaMoneyBillWave />}
           label={t("total_debt")}
@@ -960,7 +985,7 @@ const ExportLoansPanel = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 mb-6 bg-gray-50 p-4 rounded-md border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="flex items-center gap-4 mb-4 bg-gray-50 p-4 rounded-md border border-gray-100 overflow-x-auto">
         <Select
           className="w-48"
           value={statusFilter}
@@ -1027,12 +1052,11 @@ const ExportLoansPanel = () => {
 const Debt = () => {
   const { t } = useTranslation();
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get("tab") || "supplier_debt";
+  const { filters, setFilters } = useUrlFilters({ tab: "supplier_debt" });
+  const activeTab = filters.tab;
 
   const handleTabChange = (key: string) => {
-    // Clear filters when switching tabs
-    setSearchParams({ tab: key }, { replace: true });
+    setFilters(prev => ({ ...prev, tab: key }));
   };
 
   const tabs: TabsProps["items"] = [
