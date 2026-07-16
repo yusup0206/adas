@@ -26,6 +26,7 @@ import type {
 } from "@/interfaces/warehouses.interface";
 import dayjs from "dayjs";
 import { IoDocumentAttach } from "react-icons/io5";
+import { usePermission } from "@/hooks/usePermission";
 
 const { Text } = Typography;
 
@@ -74,6 +75,9 @@ const WarehousePanel = ({
       page: dispatchPage,
       pageSize,
     });
+
+  const canCreate = usePermission("WAREHOUSE_CREATE");
+  const canDelete = usePermission("WAREHOUSE_DELETE");
 
   const [deleteArrival] = useDeleteArrivalMutation();
   const [deleteDispatch] = useDeleteDispatchMutation();
@@ -164,10 +168,12 @@ const WarehousePanel = ({
     {
       title: t("actions"),
       render: (_, r) => (
-        <DeleteModal
-          id={r.id}
-          onDelete={async (id) => await deleteArrival(Number(id)).unwrap()}
-        />
+        canDelete ? (
+          <DeleteModal
+            id={r.id}
+            onDelete={async (id) => await deleteArrival(Number(id)).unwrap()}
+          />
+        ) : null
       ),
       width: 80,
     },
@@ -259,10 +265,12 @@ const WarehousePanel = ({
     {
       title: t("actions"),
       render: (_, r) => (
-        <DeleteModal
-          id={r.id}
-          onDelete={async (id) => await deleteDispatch(Number(id)).unwrap()}
-        />
+        canDelete ? (
+          <DeleteModal
+            id={r.id}
+            onDelete={async (id) => await deleteDispatch(Number(id)).unwrap()}
+          />
+        ) : null
       ),
       width: 80,
     },
@@ -311,7 +319,7 @@ const WarehousePanel = ({
       children: (
         <>
           <div className="flex justify-end mb-4">
-            <CreateDispatchModal warehouseType={warehouseType} />
+            {canCreate && <CreateDispatchModal warehouseType={warehouseType} />}
           </div>
           <Table
             loading={dispatchesLoading}

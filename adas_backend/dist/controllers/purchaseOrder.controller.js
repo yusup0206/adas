@@ -43,8 +43,9 @@ class PurchaseOrderController {
     async updateOrderStatus(req, res) {
         try {
             const { id } = req.params;
-            const { status } = req.body;
-            const result = await purchaseOrder_service_1.purchaseOrderService.updateOrderStatus(Number(id), status);
+            const { status, arrivalDate, partialItems } = req.body;
+            const parsedDate = arrivalDate ? new Date(arrivalDate) : new Date();
+            const result = await purchaseOrder_service_1.purchaseOrderService.updateOrderStatus(Number(id), status, parsedDate, partialItems);
             res.status(200).json(result);
         }
         catch (error) {
@@ -87,13 +88,15 @@ class PurchaseOrderController {
     }
     async getAllOrders(req, res) {
         try {
-            const { search, page, pageSize, status, isPaid } = req.query;
+            const { search, page, pageSize, status, isPaid, dateFrom, dateTo } = req.query;
             const filters = {
                 search: search,
                 page: page ? Number(page) : undefined,
                 pageSize: pageSize ? Number(pageSize) : undefined,
                 status: status,
                 isPaid: isPaid === 'true' ? true : isPaid === 'false' ? false : undefined,
+                dateFrom: dateFrom,
+                dateTo: dateTo,
             };
             const result = await purchaseOrder_service_1.purchaseOrderService.getAllPurchaseOrders(filters);
             res.status(200).json(result);
@@ -105,8 +108,23 @@ class PurchaseOrderController {
     }
     async getDebtSummary(req, res) {
         try {
-            const summary = await purchaseOrder_service_1.purchaseOrderService.getDebtSummary();
+            const { dateFrom, dateTo } = req.query;
+            const summary = await purchaseOrder_service_1.purchaseOrderService.getDebtSummary({
+                dateFrom: dateFrom,
+                dateTo: dateTo,
+            });
             res.status(200).json(summary);
+        }
+        catch (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    }
+    async upsertExpenses(req, res) {
+        try {
+            const { id } = req.params;
+            const result = await purchaseOrder_service_1.purchaseOrderService.upsertExpenses(Number(id), req.body);
+            res.status(200).json(result);
         }
         catch (error) {
             console.error(error);

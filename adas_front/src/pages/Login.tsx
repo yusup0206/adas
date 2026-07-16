@@ -30,7 +30,7 @@ const Login = () => {
       localStorage.setItem("refreshToken", response.refreshToken);
 
       message.success(t("success_login"));
-      navigate("/income");
+      navigate("/");
     } catch (error) {
       console.error(error);
       message.error(t("error") || "Login failed");

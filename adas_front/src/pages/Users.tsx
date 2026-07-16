@@ -15,6 +15,7 @@ import { RiPencilFill } from "react-icons/ri";
 import DeleteModal from "@/components/shared/DeleteModal";
 import { IoSearch } from "react-icons/io5";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const Users = () => {
   const { message } = App.useApp();
@@ -26,6 +27,10 @@ const Users = () => {
   const { t } = useTranslation();
 
   const { filters, setFilters } = useUrlFilters({ search: "" });
+
+  const canCreate = usePermission("USERS_CREATE");
+  const canUpdate = usePermission("USERS_UPDATE");
+  const canDelete = usePermission("USERS_DELETE");
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -84,12 +89,14 @@ const Users = () => {
       key: "actions",
       render: (_: any, record: any) => (
         <Space>
-          <RiPencilFill
-            size={20}
-            onClick={() => handleOpenModal(record)}
-            className="size-5 cursor-pointer hover:text-primary active:text-primary transition-all"
-          />
-          <DeleteModal id={record.id} onDelete={handleDelete} />
+          {canUpdate && (
+            <RiPencilFill
+              size={20}
+              onClick={() => handleOpenModal(record)}
+              className="size-5 cursor-pointer hover:text-primary active:text-primary transition-all"
+            />
+          )}
+          {canDelete && <DeleteModal id={record.id} onDelete={handleDelete} />}
         </Space>
       ),
     },
@@ -113,13 +120,15 @@ const Users = () => {
                 allowClear
               />
             </div>
-            <Button
-              type="primary"
-              size="large"
-              onClick={() => handleOpenModal()}
-            >
-              {t("add_user")}
-            </Button>
+            {canCreate && (
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => handleOpenModal()}
+              >
+                {t("add_user")}
+              </Button>
+            )}
           </div>
 
           <Table

@@ -34,7 +34,6 @@ import { EyeOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import ImportLoanPayModal from "@/components/loans/ImportLoanPayModal";
 import ExportLoanPayModal from "@/components/loans/ExportLoanPayModal";
-import { useSearchParams } from "react-router-dom";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 
 // ── Stat card ──────────────────────────────────────────────────────────────

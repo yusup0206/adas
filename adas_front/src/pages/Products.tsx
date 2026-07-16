@@ -2,9 +2,7 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import { Input, Table, type TableProps } from "antd";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 
 import { IoSearch } from "react-icons/io5";
 import CreateModal from "@/components/products/CreateModal";
@@ -17,6 +15,7 @@ import {
 } from "@/services/productsApi";
 
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const Products = () => {
   const { t, i18n } = useTranslation();
@@ -29,8 +28,14 @@ const Products = () => {
     search: "",
   });
 
+  // permissions
+  const canCreate = usePermission("PRODUCTS_CREATE");
+  const canUpdate = usePermission("PRODUCTS_UPDATE");
+  const canDelete = usePermission("PRODUCTS_DELETE");
+
   // queries
-  const { data: productsData, isLoading: productsLoading } = useGetProductsQuery(filters);
+  const { data: productsData, isLoading: productsLoading } =
+    useGetProductsQuery(filters);
   const [deleteProduct] = useDeleteProductMutation();
 
   // table data
@@ -47,10 +52,9 @@ const Products = () => {
       title: t("name"),
       dataIndex: `name_${currentLang}`,
       key: "name",
-      render: (_, record) => (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
+      render: (_, record) =>
+        (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
     },
-
-
 
     {
       title: t("unit"),
@@ -65,18 +69,18 @@ const Products = () => {
       title: t("production_country"),
       key: "productionCountry",
       render: (_, record) =>
-        (currentLang === "ru" ? record.productionCountry_ru : record.productionCountry_tm) || "-",
+        (currentLang === "ru"
+          ? record.productionCountry_ru
+          : record.productionCountry_tm) || "-",
     },
-
-
 
     {
       title: t("actions"),
       key: "action",
       render: (_, record) => (
         <div className="flex gap-4 items-center justify-start text-textColor">
-          <UpdateModal record={record} />
-          <DeleteModal id={record.id} onDelete={deleteProduct} />
+          {canUpdate && <UpdateModal record={record} />}
+          {canDelete && <DeleteModal id={record.id} onDelete={deleteProduct} />}
         </div>
       ),
     },
@@ -105,7 +109,7 @@ const Products = () => {
                   allowClear
                 />
               </div>
-              <CreateModal />
+              {canCreate && <CreateModal />}
             </div>
             <Table
               loading={productsLoading}

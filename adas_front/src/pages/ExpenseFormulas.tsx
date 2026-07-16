@@ -16,6 +16,7 @@ import { RiPencilFill } from "react-icons/ri";
 import DeleteModal from "@/components/shared/DeleteModal";
 import { IoSearch } from "react-icons/io5";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const ExpenseFormulas = () => {
   const { message } = App.useApp();
@@ -23,6 +24,10 @@ const ExpenseFormulas = () => {
   const [form] = Form.useForm();
 
   const { filters, setFilters } = useUrlFilters({ search: "" });
+
+  const canCreate = usePermission("SETTINGS_CREATE");
+  const canUpdate = usePermission("SETTINGS_UPDATE");
+  const canDelete = usePermission("SETTINGS_DELETE");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -110,12 +115,14 @@ const ExpenseFormulas = () => {
       width: 120,
       render: (_: any, record: ExpenseFormula) => (
         <Space>
-          <RiPencilFill
-            size={20}
-            onClick={() => handleOpenEdit(record)}
-            className="size-5 cursor-pointer hover:text-primary active:text-primary transition-all"
-          />
-          <DeleteModal id={record.id} onDelete={handleDelete} />
+          {canUpdate && (
+            <RiPencilFill
+              size={20}
+              onClick={() => handleOpenEdit(record)}
+              className="size-5 cursor-pointer hover:text-primary active:text-primary transition-all"
+            />
+          )}
+          {canDelete && <DeleteModal id={record.id} onDelete={handleDelete} />}
         </Space>
       ),
     },
@@ -139,14 +146,16 @@ const ExpenseFormulas = () => {
                 allowClear
               />
             </div>
-            <Button
-              type="primary"
-              size="large"
-              icon={<FaPlus />}
-              onClick={handleOpenAdd}
-            >
-              {t("add_new")}
-            </Button>
+            {canCreate && (
+              <Button
+                type="primary"
+                size="large"
+                icon={<FaPlus />}
+                onClick={handleOpenAdd}
+              >
+                {t("add_new")}
+              </Button>
+            )}
           </div>
 
           <Table

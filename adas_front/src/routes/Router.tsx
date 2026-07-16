@@ -1,6 +1,8 @@
 import Layout from "@/layouts/Layout";
 import { lazy, Suspense } from "react";
 import { Navigate, useRoutes } from "react-router-dom";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RequirePermission from "@/components/RequirePermission";
@@ -21,9 +23,27 @@ const Roles = lazy(() => import("@/pages/Roles"));
 const DispatchWaybill = lazy(() => import("@/pages/DispatchWaybill"));
 const ExpenseFormulas = lazy(() => import("@/pages/ExpenseFormulas"));
 
+const RootRedirect = () => {
+  const user = useSelector((state: RootState) => state.auth.user);
+  if (!user || !user.permissions) return <Navigate to="/login" replace />;
+
+  if (user.permissions.includes("INCOME_VIEW")) return <Navigate to="/income" replace />;
+  if (user.permissions.includes("ORDERS_VIEW")) return <Navigate to="/orders" replace />;
+  if (user.permissions.includes("WAREHOUSE_VIEW")) return <Navigate to="/warehouses" replace />;
+  if (user.permissions.includes("USERS_VIEW")) return <Navigate to="/users" replace />;
+  if (user.permissions.includes("ROLES_VIEW")) return <Navigate to="/roles" replace />;
+  if (user.permissions.includes("PRODUCTS_VIEW")) return <Navigate to="/products" replace />;
+  if (user.permissions.includes("UNITS_VIEW")) return <Navigate to="/units" replace />;
+  if (user.permissions.includes("CLIENTS_VIEW")) return <Navigate to="/clients" replace />;
+  if (user.permissions.includes("SUPPLIERS_VIEW")) return <Navigate to="/suppliers" replace />;
+  if (user.permissions.includes("SETTINGS_VIEW")) return <Navigate to="/expense-formulas" replace />;
+
+  return <Navigate to="/login" replace />;
+};
+
 function Router() {
   const routes = useRoutes([
-    { path: "/", element: <Navigate to="/income" replace /> },
+    { path: "/", element: <RootRedirect /> },
 
     { path: "/login", element: <Login /> },
 
@@ -41,8 +61,8 @@ function Router() {
           path: "clients",
           element: (
             <RequirePermission
-              permission="MANAGE_CLIENTS"
-              fallback={<Navigate to="/login" />}
+              permission="CLIENTS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Clients />
             </RequirePermission>
@@ -52,8 +72,8 @@ function Router() {
           path: "units",
           element: (
             <RequirePermission
-              permission="MANAGE_PRODUCTS"
-              fallback={<Navigate to="/login" />}
+              permission="UNITS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Units />
             </RequirePermission>
@@ -63,8 +83,8 @@ function Router() {
           path: "products",
           element: (
             <RequirePermission
-              permission="MANAGE_PRODUCTS"
-              fallback={<Navigate to="/login" />}
+              permission="PRODUCTS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Products />
             </RequirePermission>
@@ -74,8 +94,8 @@ function Router() {
           path: "orders",
           element: (
             <RequirePermission
-              permission="MANAGE_ORDERS"
-              fallback={<Navigate to="/login" />}
+              permission="ORDERS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Orders />
             </RequirePermission>
@@ -85,8 +105,8 @@ function Router() {
           path: "suppliers",
           element: (
             <RequirePermission
-              permission="MANAGE_SUPPLIERS"
-              fallback={<Navigate to="/login" />}
+              permission="SUPPLIERS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Suppliers />
             </RequirePermission>
@@ -96,8 +116,8 @@ function Router() {
           path: "income",
           element: (
             <RequirePermission
-              permission="VIEW_INCOME"
-              fallback={<Navigate to="/login" />}
+              permission="INCOME_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Income />
             </RequirePermission>
@@ -107,8 +127,8 @@ function Router() {
           path: "warehouses",
           element: (
             <RequirePermission
-              permission="MANAGE_WAREHOUSE"
-              fallback={<Navigate to="/login" />}
+              permission="WAREHOUSE_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Warehouses />
             </RequirePermission>
@@ -118,8 +138,8 @@ function Router() {
           path: "debt",
           element: (
             <RequirePermission
-              permission={["MANAGE_WAREHOUSE", "VIEW_INCOME"]}
-              fallback={<Navigate to="/login" />}
+              permission={["INCOME_VIEW", "WAREHOUSE_VIEW"]}
+              fallback={<Navigate to="/" />}
             >
               <Debt />
             </RequirePermission>
@@ -129,8 +149,8 @@ function Router() {
           path: "users",
           element: (
             <RequirePermission
-              permission="MANAGE_USERS"
-              fallback={<Navigate to="/login" />}
+              permission="USERS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Users />
             </RequirePermission>
@@ -140,8 +160,8 @@ function Router() {
           path: "roles",
           element: (
             <RequirePermission
-              permission="MANAGE_ROLES"
-              fallback={<Navigate to="/login" />}
+              permission="ROLES_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <Roles />
             </RequirePermission>
@@ -151,8 +171,8 @@ function Router() {
           path: "dispatch-waybill/:id",
           element: (
             <RequirePermission
-              permission="MANAGE_WAREHOUSE"
-              fallback={<Navigate to="/login" />}
+              permission="WAREHOUSE_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <DispatchWaybill />
             </RequirePermission>
@@ -162,8 +182,8 @@ function Router() {
           path: "expense-formulas",
           element: (
             <RequirePermission
-              permission="MANAGE_SETTINGS"
-              fallback={<Navigate to="/login" />}
+              permission="SETTINGS_VIEW"
+              fallback={<Navigate to="/" />}
             >
               <ExpenseFormulas />
             </RequirePermission>
@@ -172,7 +192,7 @@ function Router() {
       ],
     },
 
-    { path: "*", element: <Navigate to="/income" replace /> },
+    { path: "*", element: <Navigate to="/" replace /> },
   ]);
 
   return routes;

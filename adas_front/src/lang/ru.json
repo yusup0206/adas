@@ -226,5 +226,10 @@
   "formula_placeholder": "напр. 5% или 12.50",
   "formula_invalid": "Введите число или процент (напр. 5%)",
   "save_formulas": "Сохранить формулы",
-  "MANAGE_SETTINGS": "Управление настройками"
+  "MANAGE_SETTINGS": "Управление настройками",
+  "permission_view": "Просмотр",
+  "permission_create": "Создание",
+  "permission_update": "Редактирование",
+  "permission_delete": "Удаление",
+  "download": "Скачать"
 }

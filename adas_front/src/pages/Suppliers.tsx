@@ -2,9 +2,7 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import { Input, Table, type TableProps } from "antd";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 
 import { IoSearch } from "react-icons/io5";
 import type { Supplier } from "@/interfaces/suppliers.interface";
@@ -17,6 +15,7 @@ import CreateModal from "@/components/suppliers/CreateModal";
 import UpdateModal from "@/components/suppliers/UpdateModal";
 
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const Suppliers = () => {
   const { t, i18n } = useTranslation();
@@ -28,6 +27,11 @@ const Suppliers = () => {
     pageSize: "10",
     search: "",
   });
+
+  // permissions
+  const canCreate = usePermission("SUPPLIERS_CREATE");
+  const canUpdate = usePermission("SUPPLIERS_UPDATE");
+  const canDelete = usePermission("SUPPLIERS_DELETE");
 
   // queries
   const { data: suppliersData, isLoading: suppliersLoading } =
@@ -57,8 +61,10 @@ const Suppliers = () => {
       key: "action",
       render: (_, record) => (
         <div className="flex gap-4 items-center justify-start text-textColor">
-          <UpdateModal record={record} />
-          <DeleteModal id={record.id} onDelete={deleteSupplier} />
+          {canUpdate && <UpdateModal record={record} />}
+          {canDelete && (
+            <DeleteModal id={record.id} onDelete={deleteSupplier} />
+          )}
         </div>
       ),
     },
@@ -87,7 +93,7 @@ const Suppliers = () => {
                   allowClear
                 />
               </div>
-              <CreateModal />
+              {canCreate && <CreateModal />}
             </div>
             <Table
               loading={suppliersLoading}

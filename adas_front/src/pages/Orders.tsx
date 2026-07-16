@@ -2,14 +2,12 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import { Table, type TableProps } from "antd";
-import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import CreateModal from "@/components/orders/CreateModal";
 import UpdateModal from "@/components/orders/UpdateModal";
 import DeleteModal from "@/components/shared/DeleteModal";
 import UpdateStatusModal from "@/components/orders/UpdateStatusModal";
 import EditModal from "@/components/orders/EditModal";
-import { useSearchParams } from "react-router-dom";
 import { IoSearch } from "react-icons/io5";
 import { Select, Tag, Input } from "antd";
 import {
@@ -19,6 +17,7 @@ import {
 import type { Order } from "@/interfaces/orders.interface";
 
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const Orders = () => {
   const { t, i18n } = useTranslation();
@@ -30,6 +29,11 @@ const Orders = () => {
     search: "",
     status: "ALL",
   });
+
+  // permissions
+  const canCreate = usePermission("ORDERS_CREATE");
+  const canUpdate = usePermission("ORDERS_UPDATE");
+  const canDelete = usePermission("ORDERS_DELETE");
 
   const { data: ordersData, isLoading: ordersLoading } =
     useGetOrdersQuery(filters);
@@ -122,13 +126,15 @@ const Orders = () => {
       key: "action",
       render: (_, record) => (
         <div className="flex gap-2 items-center justify-start text-textColor">
-          <EditModal record={record} />
-          <UpdateModal record={record} />
-          <DeleteModal
-            id={record.id}
-            onDelete={async (id) => await deleteOrder(Number(id)).unwrap()}
-          />
-          {record.status !== "RECEIVED" && (
+          {canUpdate && <EditModal record={record} />}
+          {canUpdate && <UpdateModal record={record} />}
+          {canDelete && (
+            <DeleteModal
+              id={record.id}
+              onDelete={async (id) => await deleteOrder(Number(id)).unwrap()}
+            />
+          )}
+          {canUpdate && record.status !== "RECEIVED" && (
             <UpdateStatusModal record={record} />
           )}
         </div>
@@ -173,7 +179,7 @@ const Orders = () => {
                   ]}
                 />
               </div>
-              <CreateModal />
+              {canCreate && <CreateModal />}
             </div>
             <Table
               loading={ordersLoading}

@@ -2,9 +2,7 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import { Input, Table, type TableProps } from "antd";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 
 import { IoSearch } from "react-icons/io5";
 import CreateModal from "@/components/units/CreateModal";
@@ -14,6 +12,7 @@ import type { Unit } from "@/interfaces/units.interface";
 import DeleteModal from "@/components/shared/DeleteModal";
 
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const Units = () => {
   const { t, i18n } = useTranslation();
@@ -26,8 +25,14 @@ const Units = () => {
     search: "",
   });
 
+  // permissions
+  const canCreate = usePermission("UNITS_CREATE");
+  const canUpdate = usePermission("UNITS_UPDATE");
+  const canDelete = usePermission("UNITS_DELETE");
+
   // queries
-  const { data: unitsData, isLoading: unitsLoading } = useGetUnitsQuery(filters);
+  const { data: unitsData, isLoading: unitsLoading } =
+    useGetUnitsQuery(filters);
   const [deleteUnit] = useDeleteUnitMutation();
 
   // table data
@@ -44,7 +49,8 @@ const Units = () => {
       title: t("name"),
       dataIndex: `name_${currentLang}`,
       key: "name",
-      render: (_, record) => (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
+      render: (_, record) =>
+        (currentLang === "ru" ? record.name_ru : record.name_tm) || "-",
     },
 
     {
@@ -52,8 +58,8 @@ const Units = () => {
       key: "action",
       render: (_, record) => (
         <div className="flex gap-4 items-center justify-start text-textColor">
-          <UpdateModal record={record} />
-          <DeleteModal id={record.id} onDelete={deleteUnit} />
+          {canUpdate && <UpdateModal record={record} />}
+          {canDelete && <DeleteModal id={record.id} onDelete={deleteUnit} />}
         </div>
       ),
     },
@@ -72,11 +78,17 @@ const Units = () => {
                   size="large"
                   placeholder={t("search")}
                   value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: "1" }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      search: e.target.value,
+                      page: "1",
+                    }))
+                  }
                   allowClear
                 />
               </div>
-              <CreateModal />
+              {canCreate && <CreateModal />}
             </div>
             <Table
               loading={unitsLoading}

@@ -60,7 +60,7 @@ const DispatchWaybill = () => {
 
   return (
     <section>
-      <Header title={t(`dispatch - ${dispatch?.dispatchName}`)} goBack={true} />
+      <Header title={dispatch?.dispatchName || ""} goBack={true} />
       <Section>
         <div className="w-full flex items-center justify-end">
           <Button

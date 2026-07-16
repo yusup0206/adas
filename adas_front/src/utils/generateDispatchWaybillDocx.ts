@@ -109,7 +109,7 @@ function buildHeaderTable(): Table {
       new TableRow({
         children: [
           new TableCell({
-            width: { size: 55, type: WidthType.PERCENTAGE },
+            width: { size: 75, type: WidthType.PERCENTAGE },
             borders: noBorder,
             children: [
               para([
@@ -122,7 +122,7 @@ function buildHeaderTable(): Table {
             ],
           }),
           new TableCell({
-            width: { size: 45, type: WidthType.PERCENTAGE },
+            width: { size: 25, type: WidthType.PERCENTAGE },
             borders: noBorder,
             verticalAlign: VerticalAlign.CENTER,
             children: [

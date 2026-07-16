@@ -8,5 +8,6 @@ export declare class PurchaseOrderController {
     getSupplierBalance(req: Request, res: Response): Promise<void>;
     getAllOrders(req: Request, res: Response): Promise<void>;
     getDebtSummary(req: Request, res: Response): Promise<void>;
+    upsertExpenses(req: Request, res: Response): Promise<void>;
 }
 export declare const purchaseOrderController: PurchaseOrderController;

@@ -2,9 +2,7 @@ import Box from "@/components/shared/Box";
 import Section from "@/components/shared/Section";
 import Header from "@/components/shared/header/Header";
 import { Input, Table, type TableProps } from "antd";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 
 import { IoSearch } from "react-icons/io5";
 import CreateModal from "@/components/clients/CreateModal";
@@ -17,6 +15,7 @@ import type { Client } from "@/interfaces/clients.interface";
 import DeleteModal from "@/components/shared/DeleteModal";
 
 import { useUrlFilters } from "@/hooks/useUrlFilters";
+import { usePermission } from "@/hooks/usePermission";
 
 const Clients = () => {
   const { t, i18n } = useTranslation();
@@ -29,8 +28,14 @@ const Clients = () => {
     search: "",
   });
 
+  // permissions
+  const canCreate = usePermission("CLIENTS_CREATE");
+  const canUpdate = usePermission("CLIENTS_UPDATE");
+  const canDelete = usePermission("CLIENTS_DELETE");
+
   // queries
-  const { data: clients, isLoading: clientsLoading } = useGetClientsQuery(filters);
+  const { data: clients, isLoading: clientsLoading } =
+    useGetClientsQuery(filters);
   const [deleteClient] = useDeleteClientMutation();
 
   // table data
@@ -56,8 +61,8 @@ const Clients = () => {
       key: "action",
       render: (_, record) => (
         <div className="flex gap-4 items-center justify-start text-textColor">
-          <UpdateModal record={record} />
-          <DeleteModal id={record.id} onDelete={deleteClient} />
+          {canUpdate && <UpdateModal record={record} />}
+          {canDelete && <DeleteModal id={record.id} onDelete={deleteClient} />}
         </div>
       ),
     },
@@ -76,11 +81,17 @@ const Clients = () => {
                   size="large"
                   placeholder={t("search")}
                   value={filters.search}
-                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: "1" }))}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      search: e.target.value,
+                      page: "1",
+                    }))
+                  }
                   allowClear
                 />
               </div>
-              <CreateModal />
+              {canCreate && <CreateModal />}
             </div>
             <Table
               loading={clientsLoading}
